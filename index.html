@@ -2,7 +2,7 @@
 <html lang="zh-HK">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Mia組 - 步兵獨立報數與對數結算系統</title>
   <!-- Tailwind CSS & Lucide Icons -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -11,95 +11,107 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Plus Jakarta Sans', 'Noto Sans TC', system-ui, -apple-system, sans-serif; }
+    body { 
+      font-family: 'Plus Jakarta Sans', 'Noto Sans TC', system-ui, -apple-system, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
     input[type=number]::-webkit-inner-spin-button, 
     input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    /* 平滑捲動條 */
+    .table-container::-webkit-scrollbar { height: 6px; }
+    .table-container::-webkit-scrollbar-track { background: #f1f5f9; }
+    .table-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+    .table-container::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
   </style>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased">
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased overflow-x-hidden">
 
-  <!-- 頂部全域導航列 (Mia組 品牌與視角切換) -->
-  <header class="h-16 bg-white border-b border-slate-200/90 px-6 flex items-center justify-between sticky top-0 z-50 shadow-sm">
-    <!-- 左側品牌標誌 -->
-    <div class="flex items-center gap-3">
-      <div class="h-10 px-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20 font-black text-sm tracking-wider">
-        Mia組
-      </div>
-      <div>
-        <div class="flex items-center gap-2">
-          <h1 class="font-extrabold text-sm text-slate-900 tracking-tight">派貨員分隊報數與結算系統</h1>
-          <span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-bold">工資與結欠核算版</span>
+  <!-- 頂部全域導航列 (完美自適應手機與電腦) -->
+  <header class="bg-white border-b border-slate-200/90 px-4 sm:px-6 py-3 sticky top-0 z-50 shadow-sm transition-all">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+      
+      <!-- 左側品牌標誌與標籤 -->
+      <div class="flex items-center justify-between w-full sm:w-auto">
+        <div class="flex items-center gap-3">
+          <div class="h-9 px-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20 font-black text-sm tracking-wider flex-shrink-0">
+            Mia組
+          </div>
+          <div>
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <h1 class="font-extrabold text-sm sm:text-base text-slate-900 tracking-tight leading-none">派貨員分隊報數與結算系統</h1>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-bold leading-none">自適應版</span>
+            </div>
+            <p class="text-[11px] text-slate-500 mt-1 hidden sm:block">麗港城 • 工商區 • 東區 • 工單 • 賠付 • 預支 • 扣糧 • 剩餘結欠</p>
+          </div>
         </div>
-        <p class="text-[11px] text-slate-500">工單 • 賠付 • 預支 • 扣糧 • 今天出的糧 • 欠款步兵剩餘結欠</p>
       </div>
-    </div>
 
-    <!-- 右側角色切換器 -->
-    <div class="flex items-center gap-3">
-      <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs">
-        <span class="text-slate-500 font-medium px-2">切換視角:</span>
-        <select id="user-role-selector" onchange="changeRole(this.value)" class="bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-slate-800 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500">
-          <option value="admin">👑 總管理員 (工資全結算/扣糧/預支/出糧/平帳)</option>
+      <!-- 右側角色切換器 (手機端滿寬且對稱) -->
+      <div class="w-full sm:w-auto flex items-center gap-2 bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs">
+        <span class="text-slate-500 font-semibold px-2 text-[11px] whitespace-nowrap">切換身份:</span>
+        <select id="user-role-selector" onchange="changeRole(this.value)" class="w-full sm:w-auto bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-800 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs">
+          <option value="admin">👑 總管理員 (工資全結算/扣糧/出糧/平帳)</option>
           <option value="captain_1">🎖️ 隊長 A - 景鴻隊 (負責旗下步兵)</option>
           <option value="captain_2">🎖️ 隊長 B - 詠豪隊 (負責旗下步兵)</option>
           <option value="captain_3">🎖️ 隊長 C - 俊華隊 (負責旗下步兵)</option>
           <option value="rider_1">🏃 普通步兵 - 陳大文 (景鴻隊)</option>
-          <option value="rider_2">🏃 普通步兵 - 李志豪 (詠豪隊 - 示範預支欠款)</option>
+          <option value="rider_2">🏃 普通步兵 - 李志豪 (詠豪隊 - 欠款示範)</option>
           <option value="rider_3">🏃 普通步兵 - 黃俊傑 (俊華隊)</option>
         </select>
       </div>
+
     </div>
   </header>
 
-  <!-- ==================== 1. 總管理員全盤工資結算視圖 (Admin) ==================== -->
-  <main id="view-admin" class="flex-1 p-6 space-y-6 max-w-7xl w-full mx-auto">
+  <!-- ==================== 1. 總管理員全盤工資結算視圖 ==================== -->
+  <main id="view-admin" class="flex-1 p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-7xl w-full mx-auto">
     
-    <!-- 頂部對稱 4 大統計指標卡片 -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      <div class="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between">
+    <!-- 頂部對稱 4 大統計指標卡片 (手機 2x2 對稱網格，電腦 1x4 橫排) -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div class="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between">
         <div>
-          <div class="text-xs font-semibold text-slate-500">Mia組 今日總派送票量</div>
-          <div id="adm-stat-tickets" class="text-2xl font-black text-slate-900 mt-1">295 票</div>
+          <div class="text-[11px] sm:text-xs font-semibold text-slate-500">今日總派送票量</div>
+          <div id="adm-stat-tickets" class="text-xl sm:text-2xl font-black text-slate-900 mt-1">295 票</div>
         </div>
-        <div class="text-xs text-blue-600 font-semibold mt-2 flex items-center gap-1">
-          <i data-lucide="package-check" class="w-3.5 h-3.5"></i> 已簽收件: <span id="adm-stat-signed">288 件</span>
+        <div class="text-[11px] sm:text-xs text-blue-600 font-semibold mt-2 flex items-center gap-1">
+          <i data-lucide="package-check" class="w-3.5 h-3.5 flex-shrink-0"></i> 簽收: <span id="adm-stat-signed">288 件</span>
         </div>
       </div>
 
-      <div class="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between">
+      <div class="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between">
         <div>
-          <div class="text-xs font-semibold text-slate-500">今日結算應發總工資</div>
-          <div id="adm-stat-net" class="text-2xl font-black text-emerald-600 mt-1">$4,035</div>
+          <div class="text-[11px] sm:text-xs font-semibold text-slate-500">今日應發總工資</div>
+          <div id="adm-stat-net" class="text-xl sm:text-2xl font-black text-emerald-600 mt-1">$4,035</div>
         </div>
-        <div class="text-xs text-emerald-600 font-medium mt-1">已扣除工單、賠付與抽佣</div>
+        <div class="text-[10px] sm:text-xs text-emerald-600 font-medium mt-2">已扣除工單與扣糧</div>
       </div>
 
-      <div class="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between">
+      <div class="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between">
         <div>
-          <div class="text-xs font-semibold text-slate-500">今天實際出的糧 (轉帳總額)</div>
-          <div id="adm-stat-paid-today" class="text-2xl font-black text-indigo-600 mt-1">$2,780</div>
+          <div class="text-[11px] sm:text-xs font-semibold text-slate-500">今天出的糧 (已轉)</div>
+          <div id="adm-stat-paid-today" class="text-xl sm:text-2xl font-black text-indigo-600 mt-1">$2,780</div>
         </div>
-        <div class="text-xs text-indigo-600 font-semibold mt-1 flex items-center gap-1">
-          <i data-lucide="banknote" class="w-3.5 h-3.5"></i> 今天已實際轉出金額
+        <div class="text-[10px] sm:text-xs text-indigo-600 font-semibold mt-2 flex items-center gap-1">
+          <i data-lucide="banknote" class="w-3.5 h-3.5 flex-shrink-0"></i> 今日已轉帳金額
         </div>
       </div>
 
-      <div class="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between">
+      <div class="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between">
         <div>
-          <div class="text-xs font-semibold text-slate-500">全隊步兵剩餘結欠 (欠款)</div>
-          <div id="adm-stat-debt" class="text-2xl font-black text-rose-600 mt-1">$350</div>
+          <div class="text-[11px] sm:text-xs font-semibold text-slate-500">全隊剩餘結欠 (欠款)</div>
+          <div id="adm-stat-debt" class="text-xl sm:text-2xl font-black text-rose-600 mt-1">$350</div>
         </div>
-        <div class="text-xs text-rose-600 font-semibold mt-1 flex items-center gap-1">
-          <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i> <span id="adm-stat-debt-count">1</span> 位步兵借支大於工資
+        <div class="text-[10px] sm:text-xs text-rose-600 font-semibold mt-2 flex items-center gap-1">
+          <i data-lucide="alert-triangle" class="w-3.5 h-3.5 flex-shrink-0"></i> <span id="adm-stat-debt-count">1</span> 人借支大於工資
         </div>
       </div>
     </div>
 
-    <!-- 管理員操作列 (篩選隊長、新增步兵帳戶) -->
-    <div class="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm">
-      <div class="flex items-center gap-3">
-        <span class="text-xs font-bold text-slate-700">篩選隊長隊伍:</span>
-        <select id="adm-filter-team" onchange="renderAdminTable()" class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none">
+    <!-- 管理員操作列 (響應式堆疊) -->
+    <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 shadow-sm">
+      <div class="flex items-center gap-2">
+        <span class="text-xs font-bold text-slate-700 whitespace-nowrap">篩選隊伍:</span>
+        <select id="adm-filter-team" onchange="renderAdminTable()" class="w-full sm:w-auto bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none">
           <option value="all">全部隊伍 (全體步兵)</option>
           <option value="景鴻隊">隊長 A (景鴻隊)</option>
           <option value="詠豪隊">隊長 B (詠豪隊)</option>
@@ -108,47 +120,47 @@
       </div>
 
       <div class="flex items-center gap-2">
-        <button onclick="openAddRiderModal()" class="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-xs font-bold text-white shadow-sm flex items-center gap-1.5 transition">
-          <i data-lucide="user-plus" class="w-3.5 h-3.5"></i> ＋ 新增步兵報數帳戶
+        <button onclick="openAddRiderModal()" class="flex-1 sm:flex-initial justify-center px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-xs font-bold text-white shadow-sm flex items-center gap-1.5 transition active:scale-95">
+          <i data-lucide="user-plus" class="w-3.5 h-3.5"></i> 新增步兵帳戶
         </button>
-        <button onclick="exportCSV()" class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700 border border-slate-200 flex items-center gap-1.5 transition">
-          <i data-lucide="download" class="w-3.5 h-3.5"></i> 匯出財務報表
+        <button onclick="exportCSV()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700 border border-slate-200 flex items-center gap-1.5 transition active:scale-95">
+          <i data-lucide="download" class="w-3.5 h-3.5"></i> 匯出
         </button>
       </div>
     </div>
 
-    <!-- 全盤工資與結欠核算總表 -->
+    <!-- 全盤工資與結欠核算總表 (專屬滑動容器，保證手機不變形) -->
     <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-      <div class="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-        <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2">
-          <span class="px-2 py-0.5 bg-blue-600 text-white rounded text-xs font-black">Mia組</span>
-          全體派貨員薪酬結算、工單賠付、預支與結欠總表
+      <div class="p-3.5 sm:p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+        <h2 class="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-2">
+          <span class="px-2 py-0.5 bg-blue-600 text-white rounded text-[10px] sm:text-xs font-black">Mia組</span>
+          薪酬結算、工單賠付、預支與結欠總表
         </h2>
-        <span class="text-xs text-slate-500">工單罰款/賠付/預支/扣糧皆可直接修改，系統全自動即時結算</span>
+        <span class="text-[10px] sm:text-xs text-slate-400">👉 手機可左右滑動檢視</span>
       </div>
 
-      <div class="overflow-x-auto">
-        <table class="w-full text-left text-xs border-collapse min-w-[1650px]">
+      <div class="overflow-x-auto table-container">
+        <table class="w-full text-left text-xs border-collapse min-w-[1550px]">
           <thead class="bg-slate-100/70 text-slate-600 font-semibold border-b border-slate-200 text-[11px]">
             <tr>
-              <th class="py-3.5 px-4">步兵姓名 (ID)</th>
-              <th class="py-3.5 px-2 text-center text-blue-700">麗港城</th>
-              <th class="py-3.5 px-2 text-center text-indigo-700">工商區</th>
-              <th class="py-3.5 px-2 text-center text-violet-700">東區</th>
-              <th class="py-3.5 px-2 text-center font-bold">總票量</th>
-              <th class="py-3.5 px-2 text-center text-emerald-700">已簽收</th>
-              <th class="py-3.5 px-2 text-center text-blue-700 font-bold bg-blue-50/40">票價</th>
-              <th class="py-3.5 px-2 text-center font-bold">總金額(毛)</th>
-              <th class="py-3.5 px-2 text-center text-amber-700 font-bold bg-amber-50/30">隊長抽佣</th>
-              <th class="py-3.5 px-2 text-center text-rose-600 font-medium">工單罰款</th>
-              <th class="py-3.5 px-2 text-center text-rose-600 font-medium">賠付金額</th>
-              <th class="py-3.5 px-2 text-center text-rose-600 font-medium">其他扣糧</th>
-              <th class="py-3.5 px-3 text-center text-emerald-700 font-black bg-emerald-50/50">應發總工資</th>
-              <th class="py-3.5 px-2 text-center text-orange-600 font-bold bg-orange-50/40">預支借支</th>
-              <th class="py-3.5 px-3 text-center text-indigo-700 font-black bg-indigo-50/40">今天出的糧</th>
-              <th class="py-3.5 px-3 text-center text-rose-700 font-black bg-rose-50/50">剩餘結欠 (欠款)</th>
-              <th class="py-3.5 px-3 text-center">出糧糧期</th>
-              <th class="py-3.5 px-4 text-right">操作</th>
+              <th class="py-3 px-4 sticky left-0 bg-slate-100/90 backdrop-blur-sm z-10">步兵姓名 (ID)</th>
+              <th class="py-3 px-2 text-center text-blue-700">麗港城</th>
+              <th class="py-3 px-2 text-center text-indigo-700">工商區</th>
+              <th class="py-3 px-2 text-center text-violet-700">東區</th>
+              <th class="py-3 px-2 text-center font-bold">總票量</th>
+              <th class="py-3 px-2 text-center text-emerald-700">已簽收</th>
+              <th class="py-3 px-2 text-center text-blue-700 font-bold bg-blue-50/40">票價</th>
+              <th class="py-3 px-2 text-center font-bold">總金額(毛)</th>
+              <th class="py-3 px-2 text-center text-amber-700 font-bold bg-amber-50/30">隊長抽佣</th>
+              <th class="py-3 px-2 text-center text-rose-600 font-medium">工單罰款</th>
+              <th class="py-3 px-2 text-center text-rose-600 font-medium">賠付金額</th>
+              <th class="py-3 px-2 text-center text-rose-600 font-medium">其他扣糧</th>
+              <th class="py-3 px-3 text-center text-emerald-700 font-black bg-emerald-50/50">應發總工資</th>
+              <th class="py-3 px-2 text-center text-orange-600 font-bold bg-orange-50/40">預支借支</th>
+              <th class="py-3 px-3 text-center text-indigo-700 font-black bg-indigo-50/40">今天出的糧</th>
+              <th class="py-3 px-3 text-center text-rose-700 font-black bg-rose-50/50">剩餘結欠 (欠款)</th>
+              <th class="py-3 px-3 text-center">出糧糧期</th>
+              <th class="py-3 px-4 text-right">操作</th>
             </tr>
           </thead>
           <tbody id="admin-table-body" class="divide-y divide-slate-100 text-slate-700">
@@ -160,33 +172,33 @@
   </main>
 
   <!-- ==================== 2. 隊長工作台 (Captain View) ==================== -->
-  <main id="view-captain" class="flex-1 p-6 space-y-6 max-w-6xl w-full mx-auto hidden">
-    <div class="bg-gradient-to-r from-blue-700 to-indigo-700 rounded-3xl p-6 text-white shadow-lg flex flex-wrap justify-between items-center gap-4">
+  <main id="view-captain" class="flex-1 p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-6xl w-full mx-auto hidden">
+    <div class="bg-gradient-to-r from-blue-700 to-indigo-700 rounded-3xl p-5 sm:p-6 text-white shadow-lg flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
       <div>
-        <div class="text-xs text-blue-200 font-bold uppercase tracking-wider">Mia組 • 隊長管理工作台</div>
-        <h2 id="cap-name-display" class="text-2xl font-black mt-1">隊長 A (景鴻隊)</h2>
-        <p class="text-xs text-blue-100 mt-1">檢視隊伍旗下步兵報數，並自訂隊長抽佣金額。</p>
+        <div class="text-[10px] sm:text-xs text-blue-200 font-bold uppercase tracking-wider">Mia組 • 隊長管理工作台</div>
+        <h2 id="cap-name-display" class="text-xl sm:text-2xl font-black mt-1">隊長 A (景鴻隊)</h2>
+        <p class="text-xs text-blue-100 mt-1">檢視並協助隊伍旗下的普通步兵報數，並自訂隊長抽佣金額。</p>
       </div>
-      <div class="bg-white/10 backdrop-blur-md px-4 py-3 rounded-2xl border border-white/20 text-right">
+      <div class="w-full sm:w-auto bg-white/10 backdrop-blur-md px-4 py-3 rounded-2xl border border-white/20 text-left sm:text-right">
         <div class="text-xs text-blue-200">本隊今日總派票量</div>
-        <div id="cap-team-tickets" class="text-xl font-black">115 票</div>
+        <div id="cap-team-tickets" class="text-xl font-black mt-0.5">115 票</div>
       </div>
     </div>
 
     <!-- 隊長旗下步兵表 -->
     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-      <div class="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-        <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+      <div class="p-3.5 sm:p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+        <h3 class="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-2">
           <i data-lucide="users" class="w-4 h-4 text-blue-600"></i> 我負責的隊員名單與報數
         </h3>
-        <span class="text-xs text-slate-500">可為隊員修改「麗港城」、「工商區」與「東區」票數</span>
+        <span class="text-[10px] sm:text-xs text-slate-400">👉 手機可滑動填寫</span>
       </div>
 
-      <div class="overflow-x-auto">
-        <table class="w-full text-left text-xs border-collapse min-w-[1050px]">
+      <div class="overflow-x-auto table-container">
+        <table class="w-full text-left text-xs border-collapse min-w-[950px]">
           <thead class="bg-slate-100/70 text-slate-600 font-semibold border-b border-slate-200 text-[11px]">
             <tr>
-              <th class="py-3 px-4">隊員姓名 (ID)</th>
+              <th class="py-3 px-4 sticky left-0 bg-slate-100/90 z-10">隊員姓名 (ID)</th>
               <th class="py-3 px-2 text-center text-blue-700">麗港城</th>
               <th class="py-3 px-2 text-center text-indigo-700">工商區</th>
               <th class="py-3 px-2 text-center text-violet-700">東區</th>
@@ -206,11 +218,12 @@
     </div>
   </main>
 
-  <!-- ==================== 3. 步兵獨立報數端 (Rider View) ==================== -->
-  <main id="view-rider" class="flex-1 p-4 hidden flex justify-center items-start pt-6">
-    <div class="w-full max-w-sm bg-white border border-slate-200 rounded-3xl p-6 shadow-xl space-y-4">
+  <!-- ==================== 3. 步兵獨立報數端 (Rider View - 手機完美對稱卡片) ==================== -->
+  <main id="view-rider" class="flex-1 p-4 hidden flex justify-center items-start pt-2 sm:pt-6">
+    <div class="w-full max-w-md bg-white border border-slate-200 rounded-3xl p-5 sm:p-6 shadow-xl space-y-4">
       
-      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+      <!-- 步兵個人卡片頂部 -->
+      <div class="flex justify-between items-start border-b border-slate-100 pb-3">
         <div>
           <div class="text-[11px] text-slate-400 font-medium flex items-center gap-1">
             <span class="font-bold text-blue-600">Mia組</span> • 步兵個人報數
@@ -218,57 +231,57 @@
           <h3 id="rider-name-display" class="text-lg font-extrabold text-slate-900 mt-0.5">
             陳大文 <span class="text-xs px-2 py-0.5 bg-blue-50 text-blue-700 rounded-md font-mono font-bold">R01</span>
           </h3>
-          <div id="rider-team-display" class="text-[11px] text-slate-500 font-semibold mt-0.5">所屬隊伍：隊長 (景鴻隊)</div>
+          <div id="rider-team-display" class="text-xs text-slate-500 font-semibold mt-0.5">所屬隊伍：隊長 A (景鴻隊)</div>
         </div>
         <div class="text-right">
-          <div id="rider-price-badge" class="text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-black">
+          <div id="rider-price-badge" class="text-xs px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-black">
             $15 / 票
           </div>
-          <div id="rider-payday-display" class="text-[10px] text-purple-700 font-bold bg-purple-50 px-2 py-0.5 rounded mt-1 border border-purple-200">
+          <div id="rider-payday-display" class="text-[10px] text-purple-700 font-bold bg-purple-50 px-2 py-0.5 rounded mt-1.5 border border-purple-200">
             糧期: 逢週五
           </div>
         </div>
       </div>
 
-      <!-- 步兵輸入表單 (含三大分區) -->
+      <!-- 步兵輸入表單 (全對稱大格輸入框) -->
       <div id="rider-form" class="space-y-3">
         <div>
           <label class="text-xs font-bold text-blue-700 block mb-1">📍 觀塘麗港城派送件數 (件)</label>
-          <input id="inp-laguna" type="number" value="25" oninput="recalcRiderTally()" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-base font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <input id="inp-laguna" type="number" value="25" oninput="recalcRiderTally()" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-base font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition">
         </div>
 
         <div>
           <label class="text-xs font-bold text-indigo-700 block mb-1">🏢 觀塘工商區派送件數 (件)</label>
-          <input id="inp-industrial" type="number" value="30" oninput="recalcRiderTally()" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-base font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <input id="inp-industrial" type="number" value="30" oninput="recalcRiderTally()" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-base font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition">
         </div>
 
         <div>
           <label class="text-xs font-bold text-violet-700 block mb-1">🏙️ 東區派送件數 (件)</label>
-          <input id="inp-eastern" type="number" value="20" oninput="recalcRiderTally()" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-base font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-violet-500">
+          <input id="inp-eastern" type="number" value="20" oninput="recalcRiderTally()" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-base font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:bg-white transition">
         </div>
 
         <div>
           <label class="text-xs font-bold text-emerald-700 block mb-1">✅ 今日已簽收件數 (件)</label>
-          <input id="inp-signed" type="number" value="73" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-base font-bold text-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+          <input id="inp-signed" type="number" value="73" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-base font-bold text-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition">
         </div>
 
         <!-- 即時工資試算卡片 -->
-        <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 text-xs">
+        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2 text-xs">
           <div class="flex justify-between text-slate-600">
             <span>總派票量 (<span id="pv-total-t">75</span> 票 × $<span id="pv-price">15</span>)</span>
             <span class="text-slate-900 font-bold">$<span id="pv-gross-amt">1125</span></span>
           </div>
-          <div class="flex justify-between text-slate-500 text-[10px]">
+          <div class="flex justify-between text-slate-500 text-[11px] pt-1">
             <span>麗港:<b id="pv-laguna">25</b> | 工商:<b id="pv-industrial">30</b> | 東區:<b id="pv-eastern">20</b></span>
-            <span>已簽收: <b id="pv-signed-txt">73</b> 件</span>
+            <span>已簽收: <b id="pv-signed-txt" class="text-emerald-600">73</b> 件</span>
           </div>
-          <div class="pt-2 border-t border-slate-200 flex justify-between items-center">
+          <div class="pt-2.5 border-t border-slate-200 flex justify-between items-center">
             <span class="font-bold text-slate-800">今日預估工資 (毛額)</span>
-            <span class="text-lg font-black text-emerald-600">$<span id="pv-net-amt">1125</span></span>
+            <span class="text-xl font-black text-emerald-600">$<span id="pv-net-amt">1125</span></span>
           </div>
         </div>
 
-        <button onclick="submitRiderTally()" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition shadow-md active:scale-98">
+        <button onclick="submitRiderTally()" class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition shadow-lg shadow-blue-600/20 active:scale-98">
           🚀 確認提交今日報數數據
         </button>
       </div>
@@ -286,12 +299,12 @@
 
   <!-- ==================== 彈窗：總管理員新增步兵帳戶 ==================== -->
   <div id="modal-add-rider" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
-    <div class="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4">
+    <div class="bg-white rounded-3xl p-5 sm:p-6 max-w-md w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-        <h3 class="font-bold text-base text-slate-900 flex items-center gap-2">
+        <h3 class="font-bold text-sm sm:text-base text-slate-900 flex items-center gap-2">
           <i data-lucide="user-plus" class="w-5 h-5 text-blue-600"></i> 新增步兵報數帳戶
         </h3>
-        <button onclick="closeAddRiderModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+        <button onclick="closeAddRiderModal()" class="text-slate-400 hover:text-slate-600 p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
       </div>
 
       <div class="space-y-3 text-xs">
@@ -335,21 +348,19 @@
       </div>
 
       <div class="flex gap-2 pt-2">
-        <button onclick="saveNewRider()" class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition">確認建立並加入隊伍</button>
-        <button onclick="closeAddRiderModal()" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-semibold">取消</button>
+        <button onclick="saveNewRider()" class="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition">確認建立並加入隊伍</button>
+        <button onclick="closeAddRiderModal()" class="px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-semibold">取消</button>
       </div>
     </div>
   </div>
 
-  <!-- ==================== JavaScript 核心財務運算與聯動邏輯 ==================== -->
+  <!-- ==================== JavaScript 核心財務運算與響應式邏輯 ==================== -->
   <script>
-    // 帳戶數據庫 (完整財務項目：penalty 工單, comp 賠付, deduct 扣糧, advance 預支, paidToday 今天出的糧)
     let accounts = [
       { id: 'C01', name: '隊長 A (景鴻)', role: '隊長', team: '景鴻隊', laguna: 35, industrial: 40, eastern: 25, signed: 96, price: 16, payday: '逢週五 (週結)', commission: 80, penalty: 0, comp: 0, deduct: 0, advance: 0, paidToday: 1520, payoutStatus: '已轉帳出糧' },
       { id: 'R01', name: '陳大文', role: '普通步兵', team: '景鴻隊', laguna: 25, industrial: 30, eastern: 20, signed: 73, price: 15, payday: '逢週五 (週結)', commission: 0, penalty: 50, comp: 0, deduct: 0, advance: 0, paidToday: 0, payoutStatus: '待轉帳' },
       
       { id: 'C02', name: '隊長 B (詠豪)', role: '隊長', team: '詠豪隊', laguna: 20, industrial: 25, eastern: 15, signed: 58, price: 16, payday: '每月 7 號 (月結)', commission: 60, penalty: 0, comp: 0, deduct: 0, advance: 0, paidToday: 900, payoutStatus: '已轉帳出糧' },
-      // 李志豪示範：預支 $1000，工資只有 $650，因此剩餘結欠 $350
       { id: 'R02', name: '李志豪', role: '普通步兵', team: '詠豪隊', laguna: 15, industrial: 25, eastern: 20, signed: 57, price: 14, payday: '每月 7 號 (月結)', commission: 0, penalty: 0, comp: 150, deduct: 40, advance: 1000, paidToday: 0, payoutStatus: '待轉帳' },
       
       { id: 'C03', name: '隊長 C (俊華)', role: '隊長', team: '俊華隊', laguna: 30, industrial: 35, eastern: 20, signed: 83, price: 16, payday: '每月 15 號 (月結)', commission: 100, penalty: 0, comp: 0, deduct: 0, advance: 0, paidToday: 0, payoutStatus: '待轉帳' },
@@ -358,7 +369,6 @@
 
     let currentRole = 'admin';
 
-    // 切換視角
     function changeRole(role) {
       currentRole = role;
       document.getElementById('view-admin').classList.add('hidden');
@@ -378,7 +388,6 @@
       lucide.createIcons();
     }
 
-    // 1. 總管理員全盤財務運算表格
     function renderAdminTable() {
       const filter = document.getElementById('adm-filter-team').value;
       const tbody = document.getElementById('admin-table-body');
@@ -398,10 +407,7 @@
         const gross = ticketCount * acc.price;
         const commVal = acc.role === '隊長' ? acc.commission : 0;
         
-        // 應發總工資 = 總金額(毛) - 抽佣 - 工單 - 賠付 - 扣糧
         const netWage = gross - commVal - acc.penalty - acc.comp - acc.deduct;
-        
-        // 剩餘結欠 = 預支借支 + 今天出的糧 - 應發總工資 (若 > 0 則代表步兵倒欠公司錢)
         const netDebt = (acc.advance + acc.paidToday) - netWage;
 
         totalTickets += ticketCount;
@@ -417,64 +423,56 @@
         const tr = document.createElement('tr');
         tr.className = "hover:bg-slate-50/80 transition";
         tr.innerHTML = `
-          <td class="py-3 px-4">
-            <div class="font-bold text-slate-900">${acc.name}</div>
+          <td class="py-3 px-4 sticky left-0 bg-white shadow-sm z-10">
+            <div class="font-bold text-slate-900 whitespace-nowrap">${acc.name}</div>
             <div class="text-[10px] text-slate-400 font-mono">${acc.id} • ${acc.team} • ${acc.role}</div>
           </td>
           <td class="py-3 px-2 text-center">
-            <input type="number" value="${acc.laguna}" onchange="updateAccountField(${idx}, 'laguna', this.value)" class="w-11 bg-slate-50 border border-slate-200 rounded p-1 text-center font-bold text-blue-700">
+            <input type="number" value="${acc.laguna}" onchange="updateAccountField(${idx}, 'laguna', this.value)" class="w-12 bg-slate-50 border border-slate-200 rounded p-1 text-center font-bold text-blue-700">
           </td>
           <td class="py-3 px-2 text-center">
-            <input type="number" value="${acc.industrial}" onchange="updateAccountField(${idx}, 'industrial', this.value)" class="w-11 bg-slate-50 border border-slate-200 rounded p-1 text-center font-bold text-indigo-700">
+            <input type="number" value="${acc.industrial}" onchange="updateAccountField(${idx}, 'industrial', this.value)" class="w-12 bg-slate-50 border border-slate-200 rounded p-1 text-center font-bold text-indigo-700">
           </td>
           <td class="py-3 px-2 text-center">
-            <input type="number" value="${acc.eastern}" onchange="updateAccountField(${idx}, 'eastern', this.value)" class="w-11 bg-slate-50 border border-slate-200 rounded p-1 text-center font-bold text-violet-700">
+            <input type="number" value="${acc.eastern}" onchange="updateAccountField(${idx}, 'eastern', this.value)" class="w-12 bg-slate-50 border border-slate-200 rounded p-1 text-center font-bold text-violet-700">
           </td>
           <td class="py-3 px-2 text-center font-black text-slate-900">${ticketCount}</td>
           <td class="py-3 px-2 text-center">
-            <input type="number" value="${acc.signed}" onchange="updateAccountField(${idx}, 'signed', this.value)" class="w-11 bg-slate-50 border border-slate-200 rounded p-1 text-center font-bold text-emerald-600">
+            <input type="number" value="${acc.signed}" onchange="updateAccountField(${idx}, 'signed', this.value)" class="w-12 bg-slate-50 border border-slate-200 rounded p-1 text-center font-bold text-emerald-600">
           </td>
 
-          <!-- 票價 -->
           <td class="py-3 px-2 text-center bg-blue-50/40">
-            <input type="number" value="${acc.price}" onchange="updateAccountField(${idx}, 'price', this.value)" class="w-11 bg-white border border-blue-300 rounded p-1 text-center font-black text-blue-700">
+            <input type="number" value="${acc.price}" onchange="updateAccountField(${idx}, 'price', this.value)" class="w-12 bg-white border border-blue-300 rounded p-1 text-center font-black text-blue-700">
           </td>
 
           <td class="py-3 px-2 text-center font-bold text-slate-800">$${gross}</td>
           
-          <!-- 隊長抽佣 -->
           <td class="py-3 px-2 text-center bg-amber-50/30">
             ${acc.role === '隊長' ? `
               <input type="number" value="${acc.commission}" onchange="updateAccountField(${idx}, 'commission', this.value)" class="w-12 bg-white border border-amber-300 rounded p-1 text-center font-bold text-amber-700">
             ` : `<span class="text-slate-300">-</span>`}
           </td>
 
-          <!-- 工單罰款 -->
           <td class="py-3 px-2 text-center">
-            <input type="number" value="${acc.penalty}" onchange="updateAccountField(${idx}, 'penalty', this.value)" class="w-11 bg-slate-50 border border-slate-200 rounded p-1 text-center font-bold text-rose-600">
+            <input type="number" value="${acc.penalty}" onchange="updateAccountField(${idx}, 'penalty', this.value)" class="w-12 bg-slate-50 border border-slate-200 rounded p-1 text-center font-bold text-rose-600">
           </td>
 
-          <!-- 賠付金額 -->
           <td class="py-3 px-2 text-center">
-            <input type="number" value="${acc.comp}" onchange="updateAccountField(${idx}, 'comp', this.value)" class="w-11 bg-slate-50 border border-slate-200 rounded p-1 text-center font-bold text-rose-600">
+            <input type="number" value="${acc.comp}" onchange="updateAccountField(${idx}, 'comp', this.value)" class="w-12 bg-slate-50 border border-slate-200 rounded p-1 text-center font-bold text-rose-600">
           </td>
 
-          <!-- 其他扣糧 -->
           <td class="py-3 px-2 text-center">
-            <input type="number" value="${acc.deduct}" onchange="updateAccountField(${idx}, 'deduct', this.value)" class="w-11 bg-slate-50 border border-slate-200 rounded p-1 text-center font-bold text-rose-600">
+            <input type="number" value="${acc.deduct}" onchange="updateAccountField(${idx}, 'deduct', this.value)" class="w-12 bg-slate-50 border border-slate-200 rounded p-1 text-center font-bold text-rose-600">
           </td>
 
-          <!-- 應發總工資 -->
-          <td class="py-3 px-3 text-center font-black text-emerald-600 text-sm bg-emerald-50/50">
+          <td class="py-3 px-3 text-center font-black text-emerald-600 text-sm bg-emerald-50/50 whitespace-nowrap">
             $${netWage}
           </td>
 
-          <!-- 預支借支 -->
           <td class="py-3 px-2 text-center bg-orange-50/40">
             <input type="number" value="${acc.advance}" onchange="updateAccountField(${idx}, 'advance', this.value)" class="w-14 bg-white border border-orange-300 rounded p-1 text-center font-bold text-orange-700">
           </td>
 
-          <!-- 今天出的糧 -->
           <td class="py-3 px-3 text-center bg-indigo-50/40">
             <div class="flex items-center justify-center gap-0.5">
               <span class="text-indigo-700 font-bold">$</span>
@@ -482,8 +480,7 @@
             </div>
           </td>
 
-          <!-- 剩餘結欠 (只適用於欠錢的步兵) -->
-          <td class="py-3 px-3 text-center bg-rose-50/50">
+          <td class="py-3 px-3 text-center bg-rose-50/50 whitespace-nowrap">
             ${netDebt > 0 ? `
               <span class="px-2 py-0.5 rounded-full text-xs font-black bg-rose-600 text-white shadow-sm inline-block">
                 欠款 $${netDebt}
@@ -493,11 +490,11 @@
             `}
           </td>
 
-          <td class="py-3 px-2 text-center text-purple-700 font-semibold text-[10px]">
+          <td class="py-3 px-2 text-center text-purple-700 font-semibold text-[10px] whitespace-nowrap">
             ${acc.payday}
           </td>
 
-          <td class="py-3 px-4 text-right">
+          <td class="py-3 px-4 text-right whitespace-nowrap">
             ${acc.paidToday > 0 ? `
               <span class="text-[11px] text-indigo-600 font-bold flex items-center justify-end gap-1">
                 <i data-lucide="check-check" class="w-3.5 h-3.5"></i> 已過數
@@ -512,7 +509,6 @@
         tbody.appendChild(tr);
       });
 
-      // 更新頂部指標
       document.getElementById('adm-stat-tickets').innerText = totalTickets + ' 票';
       document.getElementById('adm-stat-signed').innerText = totalSigned + ' 件';
       document.getElementById('adm-stat-net').innerText = '$' + totalNetWage.toLocaleString();
@@ -523,14 +519,12 @@
       lucide.createIcons();
     }
 
-    // 一鍵全額出糧
     function payFullWage(idx, wage) {
       accounts[idx].paidToday = wage > 0 ? wage : 0;
       accounts[idx].payoutStatus = '已轉帳出糧';
       renderAdminTable();
     }
 
-    // 2. 渲染隊長專屬工作台
     function renderCaptainView(capRoleKey) {
       let targetTeam = '景鴻隊';
       let capName = '隊長 A (景鴻隊)';
@@ -553,7 +547,7 @@
         const tr = document.createElement('tr');
         tr.className = "hover:bg-slate-50 transition";
         tr.innerHTML = `
-          <td class="py-3 px-4 font-bold text-slate-900">
+          <td class="py-3 px-4 font-bold text-slate-900 whitespace-nowrap sticky left-0 bg-white shadow-sm z-10">
             ${acc.name} <span class="text-[10px] text-slate-400 font-normal">(${acc.role})</span>
           </td>
           <td class="py-3 px-2 text-center">
@@ -576,7 +570,7 @@
             ` : `<span class="text-slate-300">-</span>`}
           </td>
           <td class="py-3 px-3 text-center font-bold text-emerald-600">$${net}</td>
-          <td class="py-3 px-4 text-right text-[11px] text-blue-600 font-semibold">
+          <td class="py-3 px-4 text-right text-[11px] text-blue-600 font-semibold whitespace-nowrap">
             ✓ 即時同步
           </td>
         `;
@@ -587,11 +581,10 @@
       lucide.createIcons();
     }
 
-    // 3. 步兵個人報數端
     function renderRiderView(riderKey) {
-      let rIdx = 1; // 預設陳大文 (景鴻隊)
-      if (riderKey === 'rider_2') rIdx = 3; // 李志豪 (詠豪隊)
-      if (riderKey === 'rider_3') rIdx = 5; // 黃俊傑 (俊華隊)
+      let rIdx = 1;
+      if (riderKey === 'rider_2') rIdx = 3;
+      if (riderKey === 'rider_3') rIdx = 5;
 
       const acc = accounts[rIdx];
       document.getElementById('rider-name-display').innerHTML = `${acc.name} <span class="text-xs px-2 py-0.5 bg-blue-50 text-blue-700 rounded-md font-mono font-bold">${acc.id}</span>`;
@@ -650,13 +643,11 @@
       document.getElementById('rider-success-card').classList.add('hidden');
     }
 
-    // 更新數據
     function updateAccountField(idx, field, val) {
       accounts[idx][field] = Number(val) || 0;
       renderAdminTable();
     }
 
-    // 彈窗
     function openAddRiderModal() {
       document.getElementById('modal-add-rider').classList.remove('hidden');
     }
