@@ -19,14 +19,60 @@
     input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
   </style>
 </head>
-<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col antialiased overflow-x-hidden pb-10">
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col antialiased overflow-x-hidden">
 
-  <!-- 頂部全域導航列 -->
-  <header class="bg-white border-b border-slate-200 px-4 sm:px-6 py-3 sticky top-0 z-50 shadow-sm">
-    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2.5">
+  <!-- ==================== 0. 登入門禁畫面 ==================== -->
+  <div id="view-login" class="flex-1 flex items-center justify-center p-4 min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950">
+    <div class="w-full max-w-sm bg-white rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6">
       
-      <!-- 左側品牌標誌 -->
-      <div class="flex items-center justify-between w-full sm:w-auto">
+      <div class="text-center space-y-2">
+        <div class="inline-flex h-12 px-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 items-center justify-center text-white shadow-lg shadow-blue-500/30 font-black text-lg tracking-wider">
+          Mia組
+        </div>
+        <h2 class="text-lg font-extrabold text-slate-900">派件報數與薪酬結算系統</h2>
+        <p class="text-xs text-slate-500">請輸入登入編號與密碼</p>
+      </div>
+
+      <div class="space-y-4 text-xs">
+        <div>
+          <label class="font-bold text-slate-700 block mb-1.5">登入帳號 / 步兵編號 (ID)</label>
+          <input id="login-username" type="text" placeholder="例如：admin / A001 / KM001" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition uppercase">
+        </div>
+
+        <div>
+          <label class="font-bold text-slate-700 block mb-1.5">登入密碼</label>
+          <input id="login-password" type="password" placeholder="請輸入密碼" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition">
+        </div>
+
+        <div id="login-error-msg" class="p-2.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-600 font-bold text-[11px] text-center hidden">
+          帳號或密碼不正確，請重新輸入！
+        </div>
+
+        <button onclick="handleLogin()" class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold transition shadow-lg shadow-blue-600/30 active:scale-98 flex items-center justify-center gap-2">
+          <i data-lucide="log-in" class="w-4 h-4"></i> 安全登入系統
+        </button>
+      </div>
+
+      <!-- 快速提示便簽 -->
+      <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200/80 text-[10px] text-slate-500 space-y-1">
+        <div class="font-bold text-slate-700">💡 登入密碼說明：</div>
+        <div>• 👑 總管理員 Mia：帳號 <code class="text-blue-600 font-bold">admin</code> / 密碼 <code class="text-blue-600 font-bold">mia888</code></div>
+        <div>• 🎖️ 隊長 A (景鴻)：帳號 <code class="text-indigo-600 font-bold">A001</code> / 密碼 <code class="text-indigo-600 font-bold">100</code></div>
+        <div>• 🎖️ 隊長 B (詠豪)：帳號 <code class="text-indigo-600 font-bold">B001</code> / 密碼 <code class="text-indigo-600 font-bold">201</code></div>
+        <div>• 🎖️ 隊長 C (俊華)：帳號 <code class="text-indigo-600 font-bold">C001</code> / 密碼 <code class="text-indigo-600 font-bold">303</code></div>
+        <div>• 🏃 普通步兵：帳號輸入自身 ID（如 <code class="text-emerald-600 font-bold">KM001</code>）/ 密碼 <code class="text-emerald-600 font-bold">8888</code></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ==================== 系統主體區域 (登入後解鎖) ==================== -->
+  <div id="app-container" class="hidden flex-1 flex flex-col min-h-screen">
+    
+    <!-- 頂部全域導航列 -->
+    <header class="bg-white border-b border-slate-200 px-4 sm:px-6 py-3 sticky top-0 z-50 shadow-sm">
+      <div class="max-w-7xl mx-auto flex items-center justify-between gap-3">
+        
         <div class="flex items-center gap-2.5">
           <div class="h-9 px-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20 font-black text-sm tracking-wider flex-shrink-0">
             Mia組
@@ -34,307 +80,299 @@
           <div>
             <div class="flex items-center gap-1.5">
               <h1 class="font-extrabold text-sm sm:text-base text-slate-900 leading-tight">派貨員報數與薪酬結算系統</h1>
-              <span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-bold leading-none">空白純淨建帳版</span>
+              <span id="header-role-badge" class="text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-bold leading-none">身份</span>
             </div>
-            <p class="text-[11px] text-slate-500 hidden sm:block">KM自營直屬(KM001+) • A/B/C隊(002+) • 麗港城/工商區/東區(含單號) • 圍欄清場 • 隔日結算</p>
+            <p id="header-user-info" class="text-[11px] text-slate-500 hidden sm:block">登入中</p>
           </div>
         </div>
-      </div>
 
-      <!-- 右側身份切換選單 (動態同步所有你新增的步兵) -->
-      <div class="w-full sm:w-auto flex items-center gap-2 bg-slate-100 p-1.5 rounded-xl border border-slate-200 text-xs">
-        <span class="text-slate-500 font-bold px-1 text-[11px] whitespace-nowrap">切換身份:</span>
-        <select id="user-role-selector" onchange="changeRole(this.value)" class="w-full sm:w-auto bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-800 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs">
-          <!-- JS 動態生成所有帳號選項 -->
-        </select>
-      </div>
-
-    </div>
-  </header>
-
-  <!-- ==================== 1. 總管理員全盤工資結算與清場視圖 ==================== -->
-  <main id="view-admin" class="flex-1 p-3 sm:p-6 space-y-4 sm:space-y-6 max-w-7xl w-full mx-auto">
-    
-    <!-- 頂部 4 大統計指標卡片 -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
-      <div class="p-3.5 sm:p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between">
-        <div>
-          <div class="text-[11px] sm:text-xs font-semibold text-slate-500">今日全隊總票量</div>
-          <div id="adm-stat-tickets" class="text-xl sm:text-2xl font-black text-slate-900 mt-1">0 票</div>
-        </div>
-        <div class="text-[11px] sm:text-xs text-blue-600 font-semibold mt-2 flex items-center justify-between">
-          <span>簽收: <b id="adm-stat-signed">0</b> 件</span>
-          <span class="text-rose-600 font-bold">退款: <b id="adm-stat-refunded">0</b> 件</span>
-        </div>
-      </div>
-
-      <div class="p-3.5 sm:p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between">
-        <div>
-          <div class="text-[11px] sm:text-xs font-semibold text-slate-500">圍欄清場待攬收殘留</div>
-          <div id="adm-stat-pending-pickup" class="text-xl sm:text-2xl font-black text-slate-700 mt-1">0 件殘留</div>
-        </div>
-        <div class="text-[10px] sm:text-xs text-slate-500 font-medium mt-2 flex items-center gap-1">
-          <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-600 flex-shrink-0"></i> <span id="adm-stat-pending-pickup-riders">0</span> 人圍欄待攬收異常
-        </div>
-      </div>
-
-      <div class="p-3.5 sm:p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between">
-        <div>
-          <div class="text-[11px] sm:text-xs font-semibold text-slate-500">今日應發總工資</div>
-          <div id="adm-stat-net" class="text-xl sm:text-2xl font-black text-emerald-600 mt-1">$0</div>
-        </div>
-        <div class="text-[10px] sm:text-xs text-emerald-600 font-medium mt-2">已扣除工單、扣糧與抽佣</div>
-      </div>
-
-      <div class="p-3.5 sm:p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between">
-        <div>
-          <div class="text-[11px] sm:text-xs font-semibold text-slate-500">今天出的糧 / 剩餘結欠</div>
-          <div class="text-sm font-black mt-1 space-y-0.5">
-            <div class="text-indigo-600">已轉出: <span id="adm-stat-paid-today">$0</span></div>
-            <div class="text-rose-600">總欠款: <span id="adm-stat-debt">$0</span></div>
-          </div>
-        </div>
-        <div class="text-[10px] text-slate-400 mt-1">依個別糧期排定過數</div>
-      </div>
-    </div>
-
-    <!-- 管理員操作列 -->
-    <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 bg-white p-3 sm:p-4 rounded-2xl border border-slate-200/80 shadow-sm">
-      <div class="flex items-center gap-2">
-        <span class="text-xs font-bold text-slate-700 whitespace-nowrap">篩選隊伍:</span>
-        <select id="adm-filter-team" onchange="renderAdminView()" class="w-full sm:w-auto bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none">
-          <option value="all">全部隊伍 (全體步兵)</option>
-          <option value="Mia自營隊">⭐ Mia 自營隊 (KM001+ 直屬)</option>
-          <option value="景鴻隊">A 隊 (A001 景鴻隊)</option>
-          <option value="詠豪隊">B 隊 (B001 詠豪隊)</option>
-          <option value="俊華隊">C 隊 (C001 俊華隊)</option>
-        </select>
-      </div>
-
-      <div class="flex items-center gap-2">
-        <button onclick="openAddRiderModal()" class="flex-1 sm:flex-initial justify-center px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-xs font-bold text-white shadow-sm flex items-center gap-1.5 transition active:scale-95">
-          <i data-lucide="user-plus" class="w-3.5 h-3.5"></i> ＋ 新增普通步兵帳戶
+        <button onclick="handleLogout()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border border-slate-200">
+          <i data-lucide="log-out" class="w-3.5 h-3.5"></i> 登出
         </button>
-        <button onclick="clearAllData()" class="px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-semibold border border-rose-200 transition">
-          清空所有步兵
-        </button>
-      </div>
-    </div>
 
-    <!-- 📱 手機端專屬：獨立清晰大卡片流 -->
-    <div id="admin-mobile-cards" class="block md:hidden space-y-3">
-      <!-- 由 JS 動態渲染手機大卡片 -->
-    </div>
-
-    <!-- 💻 電腦端專屬：寬螢幕高密度表格 -->
-    <div class="hidden md:block bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-      <div class="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-        <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2">
-          <span class="px-2 py-0.5 bg-blue-600 text-white rounded text-xs font-black">Mia組</span>
-          全體派貨員薪酬結算、分區件數與快件單號明細表
-        </h2>
-        <span class="text-xs text-slate-400">所有名字與數值可直接在表格內修改 (自動儲存)</span>
       </div>
+    </header>
 
-      <div class="overflow-x-auto">
-        <table class="w-full text-left text-xs border-collapse min-w-[1850px]">
-          <thead class="bg-slate-100/70 text-slate-600 font-semibold border-b border-slate-200 text-[11px]">
-            <tr>
-              <th class="py-3 px-4 sticky left-0 bg-slate-100/90 backdrop-blur-sm z-10">步兵姓名 (ID)</th>
-              <th class="py-3 px-2 text-center text-blue-700 bg-blue-50/30">麗港城 (件/單號)</th>
-              <th class="py-3 px-2 text-center text-indigo-700 bg-indigo-50/30">工商區 (件/單號)</th>
-              <th class="py-3 px-2 text-center text-violet-700 bg-violet-50/30">東區 (件/單號)</th>
-              <th class="py-3 px-2 text-center font-bold">總票量</th>
-              <th class="py-3 px-2 text-center text-emerald-700">已簽收</th>
-              <th class="py-3 px-2 text-center text-rose-700 font-bold bg-rose-50/30">已退款</th>
-              <th class="py-3 px-2 text-center text-amber-700 font-bold bg-amber-50/40">圍欄待攬收</th>
-              <th class="py-3 px-2 text-center text-blue-700 font-bold bg-blue-50/40">票價</th>
-              <th class="py-3 px-2 text-center font-bold">總金額(毛)</th>
-              <th class="py-3 px-2 text-center text-amber-700 font-bold bg-amber-50/30">隊長抽佣</th>
-              <th class="py-3 px-2 text-center text-rose-600 font-medium">工單罰款</th>
-              <th class="py-3 px-2 text-center text-rose-600 font-medium">賠付扣糧</th>
-              <th class="py-3 px-3 text-center text-emerald-700 font-black bg-emerald-50/50">應發總工資</th>
-              <th class="py-3 px-2 text-center text-orange-600 font-bold bg-orange-50/40">預支借支</th>
-              <th class="py-3 px-3 text-center text-indigo-700 font-black bg-indigo-50/40">今天出的糧</th>
-              <th class="py-3 px-3 text-center text-rose-700 font-black bg-rose-50/50">剩餘結欠 (欠款)</th>
-              <th class="py-3 px-3 text-center text-purple-700 font-bold bg-purple-50/30">出糧糧期</th>
-              <th class="py-3 px-4 text-right">操作</th>
-            </tr>
-          </thead>
-          <tbody id="admin-table-body" class="divide-y divide-slate-100 text-slate-700">
-            <!-- JS 動態生成 -->
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </main>
-
-  <!-- ==================== 2. 隊長工作台 (Captain View) ==================== -->
-  <main id="view-captain" class="flex-1 p-3 sm:p-6 space-y-4 max-w-6xl w-full mx-auto hidden">
-    <div class="bg-gradient-to-r from-blue-700 to-indigo-700 rounded-3xl p-5 sm:p-6 text-white shadow-lg flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-      <div>
-        <div class="text-[10px] sm:text-xs text-blue-200 font-bold uppercase tracking-wider">Mia組 • 隊長管理工作台</div>
-        <h2 id="cap-name-display" class="text-xl sm:text-2xl font-black mt-1">隊長 A (A001 景鴻)</h2>
-        <p class="text-xs text-blue-100 mt-1">檢視轄下隊員報數，查閱各分區快件單號與清場情況。</p>
-      </div>
-      <div class="w-full sm:w-auto bg-white/10 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-white/20 text-left sm:text-right">
-        <div class="text-xs text-blue-200">本隊今日總派票量</div>
-        <div id="cap-team-tickets" class="text-xl font-black mt-0.5">0 票</div>
-      </div>
-    </div>
-
-    <!-- 隊長轄下隊員列表 -->
-    <div id="captain-mobile-cards" class="block md:hidden space-y-3"></div>
-
-    <div class="hidden md:block bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-      <div class="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-        <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
-          <i data-lucide="users" class="w-4 h-4 text-blue-600"></i> 我負責的隊員名單、件數與快件單號 (轄下 002+ 編號)
-        </h3>
-      </div>
-      <div class="overflow-x-auto">
-        <table class="w-full text-left text-xs border-collapse min-w-[1150px]">
-          <thead class="bg-slate-100/70 text-slate-600 font-semibold border-b border-slate-200 text-[11px]">
-            <tr>
-              <th class="py-3 px-4 sticky left-0 bg-slate-100/90 z-10">隊員姓名 (ID)</th>
-              <th class="py-3 px-2 text-center text-blue-700">麗港城 (件/單號)</th>
-              <th class="py-3 px-2 text-center text-indigo-700">工商區 (件/單號)</th>
-              <th class="py-3 px-2 text-center text-violet-700">東區 (件/單號)</th>
-              <th class="py-3 px-2 text-center font-bold">總票量</th>
-              <th class="py-3 px-2 text-center text-emerald-700">已簽收</th>
-              <th class="py-3 px-2 text-center text-rose-700 font-bold">已退款</th>
-              <th class="py-3 px-3 text-center text-amber-700 font-bold">圍欄待攬收</th>
-              <th class="py-3 px-2 text-center text-blue-700">票價</th>
-              <th class="py-3 px-3 text-center text-amber-700 font-bold">隊長抽佣 ($)</th>
-              <th class="py-3 px-3 text-center text-emerald-700 font-bold">預估工資</th>
-            </tr>
-          </thead>
-          <tbody id="captain-table-body" class="divide-y divide-slate-100 text-slate-700"></tbody>
-        </table>
-      </div>
-    </div>
-  </main>
-
-  <!-- ==================== 3. 步兵獨立報數端 (Rider View) ==================== -->
-  <main id="view-rider" class="flex-1 p-3.5 hidden flex justify-center items-start pt-2 sm:pt-6">
-    <div class="w-full max-w-lg bg-white border border-slate-200 rounded-3xl p-5 sm:p-6 shadow-xl space-y-4">
+    <!-- ==================== 1. 總管理員全盤工資結算與清場視圖 (只有 Mia 看得到) ==================== -->
+    <main id="view-admin" class="flex-1 p-3 sm:p-6 space-y-4 sm:space-y-6 max-w-7xl w-full mx-auto hidden">
       
-      <div class="flex justify-between items-start border-b border-slate-100 pb-3">
+      <!-- 頂部 4 大統計指標卡片 -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+        <div class="p-3.5 sm:p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between">
+          <div>
+            <div class="text-[11px] sm:text-xs font-semibold text-slate-500">今日全隊總票量</div>
+            <div id="adm-stat-tickets" class="text-xl sm:text-2xl font-black text-slate-900 mt-1">0 票</div>
+          </div>
+          <div class="text-[11px] sm:text-xs text-blue-600 font-semibold mt-2 flex items-center justify-between">
+            <span>簽收: <b id="adm-stat-signed">0</b> 件</span>
+            <span class="text-rose-600 font-bold">退款: <b id="adm-stat-refunded">0</b> 件</span>
+          </div>
+        </div>
+
+        <div class="p-3.5 sm:p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between">
+          <div>
+            <div class="text-[11px] sm:text-xs font-semibold text-slate-500">圍欄清場待攬收殘留</div>
+            <div id="adm-stat-pending-pickup" class="text-xl sm:text-2xl font-black text-slate-700 mt-1">0 件殘留</div>
+          </div>
+          <div class="text-[10px] sm:text-xs text-slate-500 font-medium mt-2 flex items-center gap-1">
+            <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-600 flex-shrink-0"></i> <span id="adm-stat-pending-pickup-riders">0</span> 人圍欄待攬收異常
+          </div>
+        </div>
+
+        <div class="p-3.5 sm:p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between">
+          <div>
+            <div class="text-[11px] sm:text-xs font-semibold text-slate-500">今日應發總工資</div>
+            <div id="adm-stat-net" class="text-xl sm:text-2xl font-black text-emerald-600 mt-1">$0</div>
+          </div>
+          <div class="text-[10px] sm:text-xs text-emerald-600 font-medium mt-2">已扣除工單、扣糧與抽佣</div>
+        </div>
+
+        <div class="p-3.5 sm:p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between">
+          <div>
+            <div class="text-[11px] sm:text-xs font-semibold text-slate-500">今天出的糧 / 剩餘結欠</div>
+            <div class="text-sm font-black mt-1 space-y-0.5">
+              <div class="text-indigo-600">已轉出: <span id="adm-stat-paid-today">$0</span></div>
+              <div class="text-rose-600">總欠款: <span id="adm-stat-debt">$0</span></div>
+            </div>
+          </div>
+          <div class="text-[10px] text-slate-400 mt-1">依個別糧期排定過數</div>
+        </div>
+      </div>
+
+      <!-- 管理員操作列 -->
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 bg-white p-3 sm:p-4 rounded-2xl border border-slate-200/80 shadow-sm">
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-bold text-slate-700 whitespace-nowrap">篩選隊伍:</span>
+          <select id="adm-filter-team" onchange="renderAdminView()" class="w-full sm:w-auto bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none">
+            <option value="all">全部隊伍 (全體步兵)</option>
+            <option value="Mia自營隊">⭐ Mia 自營隊 (KM001+ 直屬)</option>
+            <option value="景鴻隊">A 隊 (A001 景鴻隊)</option>
+            <option value="詠豪隊">B 隊 (B001 詠豪隊)</option>
+            <option value="俊華隊">C 隊 (C001 俊華隊)</option>
+          </select>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button onclick="openAddRiderModal()" class="flex-1 sm:flex-initial justify-center px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-xs font-bold text-white shadow-sm flex items-center gap-1.5 transition active:scale-95">
+            <i data-lucide="user-plus" class="w-3.5 h-3.5"></i> ＋ 新增普通步兵帳戶
+          </button>
+          <button onclick="clearAllData()" class="px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-semibold border border-rose-200 transition">
+            清空所有步兵
+          </button>
+        </div>
+      </div>
+
+      <!-- 手機端卡片流 -->
+      <div id="admin-mobile-cards" class="block md:hidden space-y-3"></div>
+
+      <!-- 電腦端寬螢幕表格 -->
+      <div class="hidden md:block bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+        <div class="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+          <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+            <span class="px-2 py-0.5 bg-blue-600 text-white rounded text-xs font-black">Mia組</span>
+            全體派貨員薪酬結算、分區件數與快件單號明細表
+          </h2>
+          <span class="text-xs text-slate-400">所有名字與數值可直接在表格內修改 (自動儲存)</span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs border-collapse min-w-[1850px]">
+            <thead class="bg-slate-100/70 text-slate-600 font-semibold border-b border-slate-200 text-[11px]">
+              <tr>
+                <th class="py-3 px-4 sticky left-0 bg-slate-100/90 backdrop-blur-sm z-10">步兵姓名 (ID)</th>
+                <th class="py-3 px-2 text-center text-blue-700 bg-blue-50/30">麗港城 (件/單號)</th>
+                <th class="py-3 px-2 text-center text-indigo-700 bg-indigo-50/30">工商區 (件/單號)</th>
+                <th class="py-3 px-2 text-center text-violet-700 bg-violet-50/30">東區 (件/單號)</th>
+                <th class="py-3 px-2 text-center font-bold">總票量</th>
+                <th class="py-3 px-2 text-center text-emerald-700">已簽收</th>
+                <th class="py-3 px-2 text-center text-rose-700 font-bold bg-rose-50/30">已退款</th>
+                <th class="py-3 px-2 text-center text-amber-700 font-bold bg-amber-50/40">圍欄待攬收</th>
+                <th class="py-3 px-2 text-center text-blue-700 font-bold bg-blue-50/40">票價</th>
+                <th class="py-3 px-2 text-center font-bold">總金額(毛)</th>
+                <th class="py-3 px-2 text-center text-amber-700 font-bold bg-amber-50/30">隊長抽佣</th>
+                <th class="py-3 px-2 text-center text-rose-600 font-medium">工單罰款</th>
+                <th class="py-3 px-2 text-center text-rose-600 font-medium">賠付扣糧</th>
+                <th class="py-3 px-3 text-center text-emerald-700 font-black bg-emerald-50/50">應發總工資</th>
+                <th class="py-3 px-2 text-center text-orange-600 font-bold bg-orange-50/40">預支借支</th>
+                <th class="py-3 px-3 text-center text-indigo-700 font-black bg-indigo-50/40">今天出的糧</th>
+                <th class="py-3 px-3 text-center text-rose-700 font-black bg-rose-50/50">剩餘結欠 (欠款)</th>
+                <th class="py-3 px-3 text-center text-purple-700 font-bold bg-purple-50/30">出糧糧期</th>
+                <th class="py-3 px-4 text-right">操作</th>
+              </tr>
+            </thead>
+            <tbody id="admin-table-body" class="divide-y divide-slate-100 text-slate-700"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+
+    <!-- ==================== 2. 隊長專屬工作台 (只有隊長登入才看得到) ==================== -->
+    <main id="view-captain" class="flex-1 p-3 sm:p-6 space-y-4 max-w-6xl w-full mx-auto hidden">
+      <div class="bg-gradient-to-r from-blue-700 to-indigo-700 rounded-3xl p-5 sm:p-6 text-white shadow-lg flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <div class="text-[11px] text-slate-400 font-medium flex items-center gap-1">
-            <span class="font-bold text-blue-600">Mia組</span> • 步兵個人報數
-          </div>
-          <h3 id="rider-name-display" class="text-lg font-extrabold text-slate-900 mt-0.5">
-            步兵姓名 <span id="rider-id-badge" class="text-xs px-2 py-0.5 bg-blue-50 text-blue-700 rounded-md font-mono font-bold">ID</span>
+          <div class="text-[10px] sm:text-xs text-blue-200 font-bold uppercase tracking-wider">Mia組 • 隊長管理工作台</div>
+          <h2 id="cap-name-display" class="text-xl sm:text-2xl font-black mt-1">隊長工作台</h2>
+          <p class="text-xs text-blue-100 mt-1">檢視轄下隊員報數，查閱各分區快件單號與清場情況。</p>
+        </div>
+        <div class="w-full sm:w-auto bg-white/10 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-white/20 text-left sm:text-right">
+          <div class="text-xs text-blue-200">本隊今日總派票量</div>
+          <div id="cap-team-tickets" class="text-xl font-black mt-0.5">0 票</div>
+        </div>
+      </div>
+
+      <div id="captain-mobile-cards" class="block md:hidden space-y-3"></div>
+
+      <div class="hidden md:block bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+          <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+            <i data-lucide="users" class="w-4 h-4 text-blue-600"></i> 我負責的隊員名單、件數與快件單號 (轄下 002+ 編號)
           </h3>
-          <div id="rider-team-display" class="text-xs text-slate-500 font-semibold mt-0.5">所屬隊伍</div>
         </div>
-        <div class="text-right">
-          <div id="rider-price-badge" class="text-xs px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-black">
-            $15 / 票
-          </div>
-          <div id="rider-payday-display" class="text-[10px] text-purple-700 font-bold bg-purple-50 px-2 py-0.5 rounded mt-1.5 border border-purple-200">
-            糧期: 隔日結算
-          </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs border-collapse min-w-[1150px]">
+            <thead class="bg-slate-100/70 text-slate-600 font-semibold border-b border-slate-200 text-[11px]">
+              <tr>
+                <th class="py-3 px-4 sticky left-0 bg-slate-100/90 z-10">隊員姓名 (ID)</th>
+                <th class="py-3 px-2 text-center text-blue-700">麗港城 (件/單號)</th>
+                <th class="py-3 px-2 text-center text-indigo-700">工商區 (件/單號)</th>
+                <th class="py-3 px-2 text-center text-violet-700">東區 (件/單號)</th>
+                <th class="py-3 px-2 text-center font-bold">總票量</th>
+                <th class="py-3 px-2 text-center text-emerald-700">已簽收</th>
+                <th class="py-3 px-2 text-center text-rose-700 font-bold">已退款</th>
+                <th class="py-3 px-3 text-center text-amber-700 font-bold">圍欄待攬收</th>
+                <th class="py-3 px-2 text-center text-blue-700">票價</th>
+                <th class="py-3 px-3 text-center text-amber-700 font-bold">隊長抽佣 ($)</th>
+                <th class="py-3 px-3 text-center text-emerald-700 font-bold">預估工資</th>
+              </tr>
+            </thead>
+            <tbody id="captain-table-body" class="divide-y divide-slate-100 text-slate-700"></tbody>
+          </table>
         </div>
       </div>
+    </main>
 
-      <div id="rider-form" class="space-y-4">
+    <!-- ==================== 3. 步兵獨立報數端 (步兵登入強制鎖死在此，完全無法看後台) ==================== -->
+    <main id="view-rider" class="flex-1 p-3.5 hidden flex justify-center items-start pt-2 sm:pt-6">
+      <div class="w-full max-w-lg bg-white border border-slate-200 rounded-3xl p-5 sm:p-6 shadow-xl space-y-4">
         
-        <!-- 1. 麗港城件數與單號 -->
-        <div class="p-3 bg-blue-50/50 rounded-2xl border border-blue-100 space-y-2">
-          <div class="flex justify-between items-center">
-            <label class="text-xs font-bold text-blue-800">📍 觀塘麗港城</label>
-            <div class="flex items-center gap-1">
-              <span class="text-[11px] text-slate-500 font-medium">件數:</span>
-              <input id="inp-laguna" type="number" value="0" oninput="recalcRiderTally()" class="w-16 bg-white border border-blue-300 rounded-lg p-1.5 text-center font-bold text-blue-700 text-sm">
+        <div class="flex justify-between items-start border-b border-slate-100 pb-3">
+          <div>
+            <div class="text-[11px] text-slate-400 font-medium flex items-center gap-1">
+              <span class="font-bold text-blue-600">Mia組</span> • 步兵個人報數
+            </div>
+            <h3 id="rider-name-display" class="text-lg font-extrabold text-slate-900 mt-0.5">
+              步兵姓名 <span id="rider-id-badge" class="text-xs px-2 py-0.5 bg-blue-50 text-blue-700 rounded-md font-mono font-bold">ID</span>
+            </h3>
+            <div id="rider-team-display" class="text-xs text-slate-500 font-semibold mt-0.5">所屬隊伍</div>
+          </div>
+          <div class="text-right">
+            <div id="rider-price-badge" class="text-xs px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-black">
+              $15 / 票
+            </div>
+            <div id="rider-payday-display" class="text-[10px] text-purple-700 font-bold bg-purple-50 px-2 py-0.5 rounded mt-1.5 border border-purple-200">
+              糧期: 隔日結算
             </div>
           </div>
-          <div>
-            <textarea id="inp-laguna-nos" rows="2" placeholder="請在此貼上/輸入麗港城快件單號..." class="w-full bg-white border border-blue-200 rounded-xl p-2 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-blue-500"></textarea>
-          </div>
         </div>
 
-        <!-- 2. 工商區件數與單號 -->
-        <div class="p-3 bg-indigo-50/50 rounded-2xl border border-indigo-100 space-y-2">
-          <div class="flex justify-between items-center">
-            <label class="text-xs font-bold text-indigo-800">🏢 觀塘工商區</label>
-            <div class="flex items-center gap-1">
-              <span class="text-[11px] text-slate-500 font-medium">件數:</span>
-              <input id="inp-industrial" type="number" value="0" oninput="recalcRiderTally()" class="w-16 bg-white border border-indigo-300 rounded-lg p-1.5 text-center font-bold text-indigo-700 text-sm">
+        <div id="rider-form" class="space-y-4">
+          
+          <!-- 1. 麗港城件數與單號 -->
+          <div class="p-3 bg-blue-50/50 rounded-2xl border border-blue-100 space-y-2">
+            <div class="flex justify-between items-center">
+              <label class="text-xs font-bold text-blue-800">📍 觀塘麗港城</label>
+              <div class="flex items-center gap-1">
+                <span class="text-[11px] text-slate-500 font-medium">件數:</span>
+                <input id="inp-laguna" type="number" value="0" oninput="recalcRiderTally()" class="w-16 bg-white border border-blue-300 rounded-lg p-1.5 text-center font-bold text-blue-700 text-sm">
+              </div>
+            </div>
+            <div>
+              <textarea id="inp-laguna-nos" rows="2" placeholder="請在此貼上/輸入麗港城快件單號..." class="w-full bg-white border border-blue-200 rounded-xl p-2 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-blue-500"></textarea>
             </div>
           </div>
-          <div>
-            <textarea id="inp-industrial-nos" rows="2" placeholder="請在此貼上/輸入工商區快件單號..." class="w-full bg-white border border-indigo-200 rounded-xl p-2 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-indigo-500"></textarea>
-          </div>
-        </div>
 
-        <!-- 3. 東區件數與單號 -->
-        <div class="p-3 bg-violet-50/50 rounded-2xl border border-violet-100 space-y-2">
-          <div class="flex justify-between items-center">
-            <label class="text-xs font-bold text-violet-800">🏙️ 東區</label>
-            <div class="flex items-center gap-1">
-              <span class="text-[11px] text-slate-500 font-medium">件數:</span>
-              <input id="inp-eastern" type="number" value="0" oninput="recalcRiderTally()" class="w-16 bg-white border border-violet-300 rounded-lg p-1.5 text-center font-bold text-violet-700 text-sm">
+          <!-- 2. 工商區件數與單號 -->
+          <div class="p-3 bg-indigo-50/50 rounded-2xl border border-indigo-100 space-y-2">
+            <div class="flex justify-between items-center">
+              <label class="text-xs font-bold text-indigo-800">🏢 觀塘工商區</label>
+              <div class="flex items-center gap-1">
+                <span class="text-[11px] text-slate-500 font-medium">件數:</span>
+                <input id="inp-industrial" type="number" value="0" oninput="recalcRiderTally()" class="w-16 bg-white border border-indigo-300 rounded-lg p-1.5 text-center font-bold text-indigo-700 text-sm">
+              </div>
+            </div>
+            <div>
+              <textarea id="inp-industrial-nos" rows="2" placeholder="請在此貼上/輸入工商區快件單號..." class="w-full bg-white border border-indigo-200 rounded-xl p-2 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-indigo-500"></textarea>
             </div>
           </div>
-          <div>
-            <textarea id="inp-eastern-nos" rows="2" placeholder="請在此貼上/輸入東區快件單號..." class="w-full bg-white border border-violet-200 rounded-xl p-2 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-violet-500"></textarea>
+
+          <!-- 3. 東區件數與單號 -->
+          <div class="p-3 bg-violet-50/50 rounded-2xl border border-violet-100 space-y-2">
+            <div class="flex justify-between items-center">
+              <label class="text-xs font-bold text-violet-800">🏙️ 東區</label>
+              <div class="flex items-center gap-1">
+                <span class="text-[11px] text-slate-500 font-medium">件數:</span>
+                <input id="inp-eastern" type="number" value="0" oninput="recalcRiderTally()" class="w-16 bg-white border border-violet-300 rounded-lg p-1.5 text-center font-bold text-violet-700 text-sm">
+              </div>
+            </div>
+            <div>
+              <textarea id="inp-eastern-nos" rows="2" placeholder="請在此貼上/輸入東區快件單號..." class="w-full bg-white border border-violet-200 rounded-xl p-2 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-violet-500"></textarea>
+            </div>
           </div>
+
+          <!-- 簽收與退款 -->
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-xs font-bold text-emerald-700 block mb-1">✅ 今日已簽收件 (件)</label>
+              <input id="inp-signed" type="number" value="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-base font-bold text-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            </div>
+            <div>
+              <label class="text-xs font-bold text-rose-700 block mb-1">🔄 今日已退款件 (件)</label>
+              <input id="inp-refunded" type="number" value="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-base font-bold text-rose-600 focus:outline-none focus:ring-2 focus:ring-rose-500">
+            </div>
+          </div>
+
+          <!-- 圍欄清場狀態 -->
+          <div class="p-3 bg-amber-50/60 rounded-2xl border border-amber-200/80 space-y-1.5">
+            <label class="text-xs font-bold text-amber-900 block flex items-center gap-1">
+              <i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-amber-600"></i> 當天該圍欄已清場，但仍有待攬收記錄 (件)
+            </label>
+            <input id="inp-pending-pickup" type="number" value="0" placeholder="無待攬收填 0" class="w-full bg-white border border-amber-300 rounded-xl p-2.5 text-sm font-bold text-amber-800 focus:outline-none focus:ring-2 focus:ring-amber-500">
+          </div>
+
+          <!-- 即時工資試算卡片 -->
+          <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2 text-xs">
+            <div class="flex justify-between text-slate-600">
+              <span>總派票量 (<span id="pv-total-t">0</span> 票 × $<span id="pv-price">15</span>)</span>
+              <span class="text-slate-900 font-bold">$<span id="pv-gross-amt">0</span></span>
+            </div>
+            <div class="flex justify-between text-slate-500 text-[11px] pt-1">
+              <span>麗港:<b id="pv-laguna">0</b> | 工商:<b id="pv-industrial">0</b> | 東區:<b id="pv-eastern">0</b></span>
+              <span>簽收: <b id="pv-signed-txt" class="text-emerald-600">0</b> | 退款: <b id="pv-refund-txt" class="text-rose-600">0</b></span>
+            </div>
+            <div class="pt-2.5 border-t border-slate-200 flex justify-between items-center">
+              <span class="font-bold text-slate-800">今日預估工資 (毛額)</span>
+              <span class="text-xl font-black text-emerald-600">$<span id="pv-net-amt">0</span></span>
+            </div>
+          </div>
+
+          <button onclick="submitRiderTally()" class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition shadow-lg shadow-blue-600/20 active:scale-98">
+            🚀 確認提交今日報數與快件單號
+          </button>
         </div>
 
-        <!-- 簽收與退款 -->
-        <div class="grid grid-cols-2 gap-2">
-          <div>
-            <label class="text-xs font-bold text-emerald-700 block mb-1">✅ 今日已簽收件 (件)</label>
-            <input id="inp-signed" type="number" value="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-base font-bold text-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-500">
-          </div>
-          <div>
-            <label class="text-xs font-bold text-rose-700 block mb-1">🔄 今日已退款件 (件)</label>
-            <input id="inp-refunded" type="number" value="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-base font-bold text-rose-600 focus:outline-none focus:ring-2 focus:ring-rose-500">
-          </div>
+        <div id="rider-success-card" class="p-5 rounded-2xl bg-emerald-50 border border-emerald-200 text-center space-y-2 hidden">
+          <i data-lucide="check-circle-2" class="w-10 h-10 text-emerald-600 mx-auto"></i>
+          <h4 class="font-bold text-sm text-emerald-900">今日報數與單號已送達 Mia組 工作台！</h4>
+          <p class="text-xs text-slate-500">總管理員核對單號、扣糧與預支後，將於指定出糧日發放。</p>
+          <button onclick="resetRiderForm()" class="mt-2 text-xs text-blue-600 font-semibold underline">修改報數</button>
         </div>
 
-        <!-- 圍欄清場狀態 -->
-        <div class="p-3 bg-amber-50/60 rounded-2xl border border-amber-200/80 space-y-1.5">
-          <label class="text-xs font-bold text-amber-900 block flex items-center gap-1">
-            <i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-amber-600"></i> 當天該圍欄已清場，但仍有待攬收記錄 (件)
-          </label>
-          <input id="inp-pending-pickup" type="number" value="0" placeholder="無待攬收填 0" class="w-full bg-white border border-amber-300 rounded-xl p-2.5 text-sm font-bold text-amber-800 focus:outline-none focus:ring-2 focus:ring-amber-500">
-        </div>
-
-        <!-- 即時工資試算卡片 -->
-        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2 text-xs">
-          <div class="flex justify-between text-slate-600">
-            <span>總派票量 (<span id="pv-total-t">0</span> 票 × $<span id="pv-price">15</span>)</span>
-            <span class="text-slate-900 font-bold">$<span id="pv-gross-amt">0</span></span>
-          </div>
-          <div class="flex justify-between text-slate-500 text-[11px] pt-1">
-            <span>麗港:<b id="pv-laguna">0</b> | 工商:<b id="pv-industrial">0</b> | 東區:<b id="pv-eastern">0</b></span>
-            <span>簽收: <b id="pv-signed-txt" class="text-emerald-600">0</b> | 退款: <b id="pv-refund-txt" class="text-rose-600">0</b></span>
-          </div>
-          <div class="pt-2.5 border-t border-slate-200 flex justify-between items-center">
-            <span class="font-bold text-slate-800">今日預估工資 (毛額)</span>
-            <span class="text-xl font-black text-emerald-600">$<span id="pv-net-amt">0</span></span>
-          </div>
-        </div>
-
-        <button onclick="submitRiderTally()" class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition shadow-lg shadow-blue-600/20 active:scale-98">
-          🚀 確認提交今日報數與快件單號
-        </button>
       </div>
+    </main>
 
-      <div id="rider-success-card" class="p-5 rounded-2xl bg-emerald-50 border border-emerald-200 text-center space-y-2 hidden">
-        <i data-lucide="check-circle-2" class="w-10 h-10 text-emerald-600 mx-auto"></i>
-        <h4 class="font-bold text-sm text-emerald-900">今日報數與單號已送達 Mia組 工作台！</h4>
-        <p class="text-xs text-slate-500">總管理員核對單號、扣糧與預支後，將於指定出糧日發放。</p>
-        <button onclick="resetRiderForm()" class="mt-2 text-xs text-blue-600 font-semibold underline">修改報數</button>
-      </div>
+  </div>
 
-    </div>
-  </main>
-
-  <!-- ==================== 彈窗 1：查看 / 編輯快件單號彈窗 ==================== -->
+  <!-- 彈窗 1：查看 / 編輯快件單號彈窗 -->
   <div id="modal-tracking-numbers" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
     <div class="bg-white rounded-3xl p-5 sm:p-6 max-w-lg w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b border-slate-100 pb-3">
@@ -369,7 +407,7 @@
     </div>
   </div>
 
-  <!-- ==================== 彈窗 2：總管理員新增普通步兵帳戶 ==================== -->
+  <!-- 彈窗 2：總管理員新增普通步兵帳戶 -->
   <div id="modal-add-rider" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
     <div class="bg-white rounded-3xl p-5 sm:p-6 max-w-md w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b border-slate-100 pb-3">
@@ -420,9 +458,8 @@
     </div>
   </div>
 
-  <!-- ==================== JavaScript 核心業務與自建帳戶邏輯 ==================== -->
   <script>
-    // 初始基底：僅保留 3 位隊長基底，普通步兵初始為 0（完全由你新增）
+    // 初始基底：僅保留 3 位隊長基底，密碼分別為 100, 201, 303
     const initialBase = [
       { id: 'A001', name: '隊長 A (景鴻)', role: '隊長', team: '景鴻隊', prefix: 'A', 
         laguna: 0, lagunaNos: '', industrial: 0, industrialNos: '', eastern: 0, easternNos: '',
@@ -437,13 +474,12 @@
         signed: 0, refunded: 0, pendingPickup: 0, price: 16, payday: '每月 15 號 (月結)', commission: 0, penalty: 0, comp: 0, deduct: 0, advance: 0, paidToday: 0, payoutStatus: '待轉帳' }
     ];
 
-    let accounts = JSON.parse(localStorage.getItem('MIA_COURIER_DATA_CLEAN_2026')) || initialBase;
+    let accounts = JSON.parse(localStorage.getItem('MIA_COURIER_PWD_DATA_2026')) || initialBase;
+    let loggedInUser = null;
     let editingTrackIdx = -1;
-    let currentRole = 'admin';
 
     function saveData() {
-      localStorage.setItem('MIA_COURIER_DATA_CLEAN_2026', JSON.stringify(accounts));
-      updateRoleDropdown();
+      localStorage.setItem('MIA_COURIER_PWD_DATA_2026', JSON.stringify(accounts));
     }
 
     function clearAllData() {
@@ -451,47 +487,99 @@
         accounts = JSON.parse(JSON.stringify(initialBase));
         saveData();
         renderAdminView();
-        changeRole('admin');
       }
     }
 
-    // 動態更新頂部身份選單
-    function updateRoleDropdown() {
-      const select = document.getElementById('user-role-selector');
-      select.innerHTML = `
-        <option value="admin">👑 總管理員 Mia (全盤掌控/出糧平帳)</option>
-        <option value="captain_1">🎖️ 隊長 A (A001 景鴻)</option>
-        <option value="captain_2">🎖️ 隊長 B (B001 詠豪)</option>
-        <option value="captain_3">🎖️ 隊長 C (C001 俊華)</option>
-      `;
+    // 登入驗證（包含隊長專屬密碼）
+    function handleLogin() {
+      const u = document.getElementById('login-username').value.trim().toUpperCase();
+      const p = document.getElementById('login-password').value.trim();
+      const errBox = document.getElementById('login-error-msg');
+      errBox.classList.add('hidden');
 
-      accounts.forEach((acc, idx) => {
-        if (acc.role !== '隊長') {
-          const opt = document.createElement('option');
-          opt.value = `rider_${idx}`;
-          opt.innerText = `🏃 ${acc.id} ${acc.name} (${acc.team})`;
-          select.appendChild(opt);
-        }
-      });
+      // 1. 總管理員 Mia 登入
+      if (u === 'ADMIN' && p === 'mia888') {
+        loggedInUser = { role: 'admin', name: '總管理員 Mia' };
+        enterApp();
+        return;
+      }
+
+      // 2. 隊長 A (景鴻 - 密碼 100)
+      if (u === 'A001' && p === '100') {
+        const cap = accounts.find(a => a.id === 'A001');
+        loggedInUser = { role: 'captain', id: 'A001', team: cap.team, name: cap.name };
+        enterApp();
+        return;
+      }
+
+      // 3. 隊長 B (詠豪 - 密碼 201)
+      if (u === 'B001' && p === '201') {
+        const cap = accounts.find(a => a.id === 'B001');
+        loggedInUser = { role: 'captain', id: 'B001', team: cap.team, name: cap.name };
+        enterApp();
+        return;
+      }
+
+      // 4. 隊長 C (俊華 - 密碼 303)
+      if (u === 'C001' && p === '303') {
+        const cap = accounts.find(a => a.id === 'C001');
+        loggedInUser = { role: 'captain', id: 'C001', team: cap.team, name: cap.name };
+        enterApp();
+        return;
+      }
+
+      // 5. 普通步兵登入 (輸入自己的 ID, 密碼 8888)
+      const riderIdx = accounts.findIndex(a => a.id.toUpperCase() === u && a.role !== '隊長');
+      if (riderIdx !== -1 && p === '8888') {
+        loggedInUser = { role: 'rider', idx: riderIdx, ...accounts[riderIdx] };
+        enterApp();
+        return;
+      }
+
+      // 驗證失敗
+      errBox.classList.remove('hidden');
     }
 
-    function changeRole(role) {
-      currentRole = role;
+    function enterApp() {
+      document.getElementById('view-login').classList.add('hidden');
+      document.getElementById('app-container').classList.remove('hidden');
+
       document.getElementById('view-admin').classList.add('hidden');
       document.getElementById('view-captain').classList.add('hidden');
       document.getElementById('view-rider').classList.add('hidden');
 
-      if (role === 'admin') {
+      const badge = document.getElementById('header-role-badge');
+      const info = document.getElementById('header-user-info');
+
+      if (loggedInUser.role === 'admin') {
+        badge.innerText = '👑 總管理員';
+        badge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-bold leading-none';
+        info.innerText = 'Mia (全權財務掌控)';
         document.getElementById('view-admin').classList.remove('hidden');
         renderAdminView();
-      } else if (role.startsWith('captain')) {
+      } else if (loggedInUser.role === 'captain') {
+        badge.innerText = '🎖️ 隊長';
+        badge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 font-bold leading-none';
+        info.innerText = `${loggedInUser.name} (${loggedInUser.id})`;
         document.getElementById('view-captain').classList.remove('hidden');
-        renderCaptainView(role);
-      } else if (role.startsWith('rider')) {
+        renderCaptainView(loggedInUser.id);
+      } else if (loggedInUser.role === 'rider') {
+        badge.innerText = '🏃 派貨員';
+        badge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold leading-none';
+        info.innerText = `${loggedInUser.name} (${loggedInUser.id} • ${loggedInUser.team})`;
         document.getElementById('view-rider').classList.remove('hidden');
-        const idx = Number(role.replace('rider_', ''));
-        renderRiderView(idx);
+        renderRiderView(loggedInUser.idx);
       }
+      lucide.createIcons();
+    }
+
+    function handleLogout() {
+      loggedInUser = null;
+      document.getElementById('login-username').value = '';
+      document.getElementById('login-password').value = '';
+      document.getElementById('login-error-msg').classList.add('hidden');
+      document.getElementById('app-container').classList.add('hidden');
+      document.getElementById('view-login').classList.remove('hidden');
       lucide.createIcons();
     }
 
@@ -537,7 +625,6 @@
           inDebtCount++;
         }
 
-        // 1. 手機端卡片
         const card = document.createElement('div');
         card.className = `bg-white rounded-2xl border ${acc.pendingPickup > 0 ? 'border-amber-400 bg-amber-50/20' : 'border-slate-200/90'} p-4 shadow-sm space-y-3`;
         card.innerHTML = `
@@ -635,7 +722,7 @@
         `;
         mobileContainer.appendChild(card);
 
-        // 2. 電腦端表格
+        // 電腦端表格行
         const tr = document.createElement('tr');
         tr.className = `hover:bg-slate-50/80 transition ${acc.pendingPickup > 0 ? 'bg-amber-50/20' : ''}`;
         tr.innerHTML = `
@@ -766,20 +853,9 @@
       lucide.createIcons();
     }
 
-    function payFullWage(idx, wage) {
-      accounts[idx].paidToday = wage > 0 ? wage : 0;
-      accounts[idx].payoutStatus = '已轉帳出糧';
-      saveData();
-      renderAdminView();
-    }
-
-    function renderCaptainView(capRoleKey) {
-      let targetTeam = '景鴻隊';
-      let capName = '隊長 A (A001 景鴻)';
-      if (capRoleKey === 'captain_2') { targetTeam = '詠豪隊'; capName = '隊長 B (B001 詠豪)'; }
-      if (capRoleKey === 'captain_3') { targetTeam = '俊華隊'; capName = '隊長 C (俊華隊)'; }
-
-      document.getElementById('cap-name-display').innerText = capName;
+    function renderCaptainView(capId) {
+      const cap = accounts.find(a => a.id === capId);
+      document.getElementById('cap-name-display').innerText = `${cap.name} (${cap.id})`;
       const tbody = document.getElementById('captain-table-body');
       const mobileCards = document.getElementById('captain-mobile-cards');
       
@@ -787,7 +863,7 @@
       mobileCards.innerHTML = '';
 
       let teamTickets = 0;
-      accounts.filter(a => a.team === targetTeam).forEach((acc) => {
+      accounts.filter(a => a.team === cap.team).forEach((acc) => {
         const tCount = (acc.laguna || 0) + (acc.industrial || 0) + (acc.eastern || 0);
         teamTickets += tCount;
         const gross = tCount * acc.price;
@@ -809,15 +885,15 @@
           <div class="grid grid-cols-4 gap-1.5 text-center text-xs">
             <div>
               <div class="text-[10px] text-blue-700">麗港城</div>
-              <input type="number" value="${acc.laguna || 0}" onchange="updateAccountField(${globalIdx}, 'laguna', this.value); renderCaptainView('${capRoleKey}');" class="w-full bg-slate-50 border border-slate-200 rounded p-1 text-center font-bold text-blue-700 mt-1">
+              <input type="number" value="${acc.laguna || 0}" onchange="updateAccountField(${globalIdx}, 'laguna', this.value); renderCaptainView('${capId}');" class="w-full bg-slate-50 border border-slate-200 rounded p-1 text-center font-bold text-blue-700 mt-1">
             </div>
             <div>
               <div class="text-[10px] text-indigo-700">工商區</div>
-              <input type="number" value="${acc.industrial || 0}" onchange="updateAccountField(${globalIdx}, 'industrial', this.value); renderCaptainView('${capRoleKey}');" class="w-full bg-slate-50 border border-slate-200 rounded p-1 text-center font-bold text-indigo-700 mt-1">
+              <input type="number" value="${acc.industrial || 0}" onchange="updateAccountField(${globalIdx}, 'industrial', this.value); renderCaptainView('${capId}');" class="w-full bg-slate-50 border border-slate-200 rounded p-1 text-center font-bold text-indigo-700 mt-1">
             </div>
             <div>
               <div class="text-[10px] text-violet-700">東區</div>
-              <input type="number" value="${acc.eastern || 0}" onchange="updateAccountField(${globalIdx}, 'eastern', this.value); renderCaptainView('${capRoleKey}');" class="w-full bg-slate-50 border border-slate-200 rounded p-1 text-center font-bold text-violet-700 mt-1">
+              <input type="number" value="${acc.eastern || 0}" onchange="updateAccountField(${globalIdx}, 'eastern', this.value); renderCaptainView('${capId}');" class="w-full bg-slate-50 border border-slate-200 rounded p-1 text-center font-bold text-violet-700 mt-1">
             </div>
             <div>
               <div class="text-[10px] text-emerald-700">已簽收</div>
@@ -850,19 +926,19 @@
           </td>
           <td class="py-3 px-2 text-center">
             <div class="flex items-center justify-center gap-1">
-              <input type="number" value="${acc.laguna || 0}" onchange="updateAccountField(${globalIdx}, 'laguna', this.value); renderCaptainView('${capRoleKey}');" class="w-10 bg-slate-50 border border-slate-200 rounded p-1 text-center font-bold text-blue-700">
+              <input type="number" value="${acc.laguna || 0}" onchange="updateAccountField(${globalIdx}, 'laguna', this.value); renderCaptainView('${capId}');" class="w-10 bg-slate-50 border border-slate-200 rounded p-1 text-center font-bold text-blue-700">
               <button onclick="openTrackingModal(${globalIdx})" class="p-1 text-blue-600 hover:bg-blue-50 rounded"><i data-lucide="file-text" class="w-3.5 h-3.5"></i></button>
             </div>
           </td>
           <td class="py-3 px-2 text-center">
             <div class="flex items-center justify-center gap-1">
-              <input type="number" value="${acc.industrial || 0}" onchange="updateAccountField(${globalIdx}, 'industrial', this.value); renderCaptainView('${capRoleKey}');" class="w-10 bg-slate-50 border border-slate-200 rounded p-1 text-center font-bold text-indigo-700">
+              <input type="number" value="${acc.industrial || 0}" onchange="updateAccountField(${globalIdx}, 'industrial', this.value); renderCaptainView('${capId}');" class="w-10 bg-slate-50 border border-slate-200 rounded p-1 text-center font-bold text-indigo-700">
               <button onclick="openTrackingModal(${globalIdx})" class="p-1 text-indigo-600 hover:bg-indigo-50 rounded"><i data-lucide="file-text" class="w-3.5 h-3.5"></i></button>
             </div>
           </td>
           <td class="py-3 px-2 text-center">
             <div class="flex items-center justify-center gap-1">
-              <input type="number" value="${acc.eastern || 0}" onchange="updateAccountField(${globalIdx}, 'eastern', this.value); renderCaptainView('${capRoleKey}');" class="w-10 bg-slate-50 border border-slate-200 rounded p-1 text-center font-bold text-violet-700">
+              <input type="number" value="${acc.eastern || 0}" onchange="updateAccountField(${globalIdx}, 'eastern', this.value); renderCaptainView('${capId}');" class="w-10 bg-slate-50 border border-slate-200 rounded p-1 text-center font-bold text-violet-700">
               <button onclick="openTrackingModal(${globalIdx})" class="p-1 text-violet-600 hover:bg-violet-50 rounded"><i data-lucide="file-text" class="w-3.5 h-3.5"></i></button>
             </div>
           </td>
@@ -894,7 +970,7 @@
     function renderRiderView(idx) {
       const acc = accounts[idx];
       document.getElementById('rider-name-display').innerHTML = `${acc.name} <span id="rider-id-badge" class="text-xs px-2 py-0.5 ${acc.prefix === 'KM' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 'bg-blue-50 text-blue-700 border-blue-200'} rounded-md font-mono font-bold">${acc.id}</span>`;
-      document.getElementById('rider-team-display').innerText = `歸屬：${acc.team}`;
+      document.getElementById('rider-team-display').innerText = `所屬隊伍：${acc.team}`;
       document.getElementById('rider-price-badge').innerText = `$${acc.price} / 票`;
       document.getElementById('rider-payday-display').innerText = `糧期: ${acc.payday}`;
 
@@ -912,6 +988,9 @@
     }
 
     function recalcRiderTally() {
+      if (!loggedInUser || loggedInUser.role !== 'rider') return;
+      const acc = accounts[loggedInUser.idx];
+
       const lag = Number(document.getElementById('inp-laguna').value) || 0;
       const ind = Number(document.getElementById('inp-industrial').value) || 0;
       const eas = Number(document.getElementById('inp-eastern').value) || 0;
@@ -919,19 +998,13 @@
       const refunded = Number(document.getElementById('inp-refunded').value) || 0;
       const tot = lag + ind + eas;
 
-      let rPrice = 15;
-      if (currentRole.startsWith('rider_')) {
-        const idx = Number(currentRole.replace('rider_', ''));
-        rPrice = accounts[idx]?.price || 15;
-      }
-
-      const gross = tot * rPrice;
+      const gross = tot * acc.price;
 
       document.getElementById('pv-laguna').innerText = lag;
       document.getElementById('pv-industrial').innerText = ind;
       document.getElementById('pv-eastern').innerText = eas;
       document.getElementById('pv-total-t').innerText = tot;
-      document.getElementById('pv-price').innerText = rPrice;
+      document.getElementById('pv-price').innerText = acc.price;
       document.getElementById('pv-signed-txt').innerText = signed;
       document.getElementById('pv-refund-txt').innerText = refunded;
       document.getElementById('pv-gross-amt').innerText = gross;
@@ -939,8 +1012,8 @@
     }
 
     function submitRiderTally() {
-      if (!currentRole.startsWith('rider_')) return;
-      const rIdx = Number(currentRole.replace('rider_', ''));
+      if (!loggedInUser || loggedInUser.role !== 'rider') return;
+      const rIdx = loggedInUser.idx;
 
       accounts[rIdx].laguna = Number(document.getElementById('inp-laguna').value) || 0;
       accounts[rIdx].lagunaNos = document.getElementById('inp-laguna-nos').value.trim();
@@ -956,7 +1029,6 @@
       saveData();
       document.getElementById('rider-form').classList.add('hidden');
       document.getElementById('rider-success-card').classList.remove('hidden');
-      renderAdminView();
     }
 
     function resetRiderForm() {
@@ -1009,7 +1081,6 @@
       document.getElementById('modal-add-rider').classList.add('hidden');
     }
 
-    // 新增普通步兵：純手動輸入姓名，自動配發 KM001+ / A002+ / B002+ / C002+
     function saveNewRider() {
       const name = document.getElementById('new-rider-name').value.trim();
       const team = document.getElementById('new-rider-team').value;
@@ -1025,14 +1096,13 @@
       if (team === '詠豪隊') { prefix = 'B'; role = '普通步兵'; }
       if (team === '俊華隊') { prefix = 'C'; role = '普通步兵'; }
 
-      // 計算該隊伍目前已有人數
       const teamMembers = accounts.filter(a => a.team === team);
       let nextSeq = 1;
       
       if (prefix === 'KM') {
-        nextSeq = teamMembers.length + 1; // KM001, KM002...
+        nextSeq = teamMembers.length + 1;
       } else {
-        nextSeq = teamMembers.length + 1; // A002, A003... (因為有隊長 A001)
+        nextSeq = teamMembers.length + 1;
       }
 
       const newId = prefix + String(nextSeq).padStart(3, '0');
@@ -1061,7 +1131,7 @@
       });
 
       saveData();
-      alert(`✅ 成功建立步兵「${name}」！\n歸屬隊伍：${team}\n系統自動分配編號：【${newId}】\n糧期：${payday}`);
+      alert(`✅ 成功建立步兵「${name}」！\n歸屬隊伍：${team}\n登入帳號：【${newId}】\n預設密碼：【8888】\n糧期：${payday}`);
       closeAddRiderModal();
       document.getElementById('new-rider-name').value = '';
       renderAdminView();
@@ -1069,7 +1139,6 @@
 
     document.addEventListener('DOMContentLoaded', () => {
       saveData();
-      renderAdminView();
       lucide.createIcons();
     });
   </script>
