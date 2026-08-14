@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>步兵派件獨立報數與對數結算系統</title>
+  <!-- Tailwind CSS & Lucide Icons -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', 'Noto Sans TC', system-ui, -apple-system, sans-serif; }
+    input[type=number]::-webkit-inner-spin-button, 
+    input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased">
+
+  <!-- 頂部全域導航列 -->
+  <header class="h-16 bg-white border-b border-slate-200/80 px-6 flex items-center justify-between sticky top-0 z-50 shadow-sm">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+        <i data-lucide="calculator" class="w-5 h-5"></i>
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <h1 class="font-bold text-sm text-slate-900 tracking-tight">COURIER PAYROLL</h1>
+          <span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-semibold">2026 實時核算版</span>
+        </div>
+        <p class="text-xs text-slate-500">派貨員獨立帳目 • 每日報數 • 罰款賠付 • 現金結欠核對</p>
+      </div>
+    </div>
+
+    <!-- 視圖切換按鈕 -->
+    <div class="flex items-center gap-2 bg-slate-100 p-1 rounded-xl border border-slate-200">
+      <button id="btn-admin" onclick="switchTab('admin')" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all bg-white text-blue-600 shadow-sm">
+        <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i> 管理員對數工作台
+      </button>
+      <button id="btn-rider" onclick="switchTab('rider')" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-900">
+        <i data-lucide="smartphone" class="w-3.5 h-3.5"></i> 步兵每日登入報數
+      </button>
+    </div>
+  </header>
+
+  <!-- ==================== 1. 管理員對數核算工作台 ==================== -->
+  <main id="tab-admin" class="flex-1 p-6 space-y-6 max-w-7xl w-full mx-auto">
+    
+    <!-- 頂部 4 大統計指標卡片 -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm relative overflow-hidden">
+        <div class="text-xs font-medium text-slate-500">今日總派送票量</div>
+        <div id="stat-tickets" class="text-2xl font-black text-slate-900 mt-1">245 票</div>
+        <div class="text-xs text-blue-600 font-semibold mt-1 flex items-center gap-1">
+          <i data-lucide="trending-up" class="w-3.5 h-3.5"></i> 派件毛額: $<span id="stat-gross">3,675</span>
+        </div>
+      </div>
+
+      <div class="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm relative overflow-hidden">
+        <div class="text-xs font-medium text-slate-500">今日實發總工資 (淨額)</div>
+        <div id="stat-net" class="text-2xl font-black text-emerald-600 mt-1">$3,380</div>
+        <div class="text-xs text-emerald-600/90 font-medium mt-1">已扣除抽佣、罰款與賠付</div>
+      </div>
+
+      <div class="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm relative overflow-hidden">
+        <div class="text-xs font-medium text-slate-500">代收現金 (未交結欠)</div>
+        <div id="stat-cod" class="text-2xl font-black text-amber-600 mt-1">$3,300</div>
+        <div class="text-xs text-amber-600 font-semibold mt-1 flex items-center gap-1">
+          <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> <span id="stat-pending-count">2</span> 位步兵待點收現金
+        </div>
+      </div>
+
+      <div class="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm relative overflow-hidden">
+        <div class="text-xs font-medium text-slate-500">罰款與各項扣減總計</div>
+        <div id="stat-deductions" class="text-2xl font-black text-rose-600 mt-1">-$220</div>
+        <div class="text-xs text-slate-400 mt-1">工單遲到 + 貨損 + 其他扣糧</div>
+      </div>
+    </div>
+
+    <!-- 核心數據表格卡片 -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+      <div class="p-4 sm:px-6 border-b border-slate-100 flex flex-wrap gap-4 items-center justify-between bg-slate-50/50">
+        <div>
+          <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+            <i data-lucide="file-spreadsheet" class="w-4 h-4 text-blue-600"></i> 單兵獨立帳目結算表 (2026-08-14)
+          </h2>
+          <p class="text-xs text-slate-500 mt-0.5">點擊各欄位可直接修改數值，系統即時聯動重新計算總工資與結欠</p>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button onclick="resetData()" class="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 border border-slate-200 shadow-sm flex items-center gap-1.5 transition">
+            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> 重置數據
+          </button>
+          <button onclick="exportCSV()" class="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-xs font-bold text-white shadow-sm flex items-center gap-1.5 transition">
+            <i data-lucide="download" class="w-3.5 h-3.5"></i> 匯出財務報表
+          </button>
+        </div>
+      </div>
+
+      <!-- 表格主體 -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs border-collapse min-w-[1100px]">
+          <thead class="bg-slate-100/70 text-slate-600 font-semibold border-b border-slate-200/80 text-[11px]">
+            <tr>
+              <th class="py-3.5 px-4">步兵姓名 (ID)</th>
+              <th class="py-3.5 px-3 text-center">派票量</th>
+              <th class="py-3.5 px-3 text-center">單價</th>
+              <th class="py-3.5 px-3 text-center font-bold text-slate-700">總金額(毛)</th>
+              <th class="py-3.5 px-3 text-center text-amber-700 font-medium">新人抽佣票數</th>
+              <th class="py-3.5 px-3 text-center text-rose-600 font-medium">工單罰款</th>
+              <th class="py-3.5 px-3 text-center text-rose-600 font-medium">賠付金額</th>
+              <th class="py-3.5 px-3 text-center text-rose-600 font-medium">扣糧金額</th>
+              <th class="py-3.5 px-3 text-center text-emerald-700 font-bold bg-emerald-50/50">今日總工資 (淨額)</th>
+              <th class="py-3.5 px-3 text-center">代收現金(COD)</th>
+              <th class="py-3.5 px-3 text-center text-amber-700 font-bold">剩餘結欠</th>
+              <th class="py-3.5 px-3 text-center">平帳狀態</th>
+              <th class="py-3.5 px-4 text-right">操作</th>
+            </tr>
+          </thead>
+          <tbody id="table-body" class="divide-y divide-slate-100 text-slate-700">
+            <!-- 動態生成數據行 -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- ==================== 2. 步兵手機端每日報數 ==================== -->
+  <main id="tab-rider" class="flex-1 p-4 hidden flex justify-center items-start pt-6">
+    <div class="w-full max-w-sm bg-white border border-slate-200 rounded-3xl p-6 shadow-xl space-y-5">
+      
+      <div class="flex justify-between items-center border-b border-slate-100 pb-4">
+        <div>
+          <div class="text-[11px] text-slate-400 font-medium">當前登入派貨員</div>
+          <h3 class="text-lg font-extrabold text-slate-900 flex items-center gap-1.5 mt-0.5">
+            陳大文 <span class="text-xs px-2 py-0.5 bg-blue-50 text-blue-700 rounded-md font-mono font-bold">R01</span>
+          </h3>
+        </div>
+        <div class="text-right">
+          <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold">已排班出勤</span>
+          <div class="text-[11px] text-slate-500 font-semibold mt-1">單價: $15 / 票</div>
+        </div>
+      </div>
+
+      <!-- 報數表單 -->
+      <div id="rider-form" class="space-y-4">
+        <div>
+          <label class="text-xs font-bold text-slate-700 block mb-1">今日派送完成票數 (件)</label>
+          <div class="relative">
+            <input id="rider-tickets" type="number" value="85" oninput="recalcRiderPreview()" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-base font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition">
+            <span class="absolute right-3.5 top-3 text-xs text-slate-400 font-semibold">票</span>
+          </div>
+        </div>
+
+        <div>
+          <label class="text-xs font-bold text-slate-700 block mb-1">今日代收客戶現金 (COD - HKD)</label>
+          <div class="relative">
+            <input id="rider-cod" type="number" value="1200" oninput="recalcRiderPreview()" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-base font-bold text-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition">
+            <span class="absolute right-3.5 top-3 text-xs text-slate-400 font-semibold">HKD</span>
+          </div>
+        </div>
+
+        <!-- 即時工資試算卡片 -->
+        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2.5 text-xs">
+          <div class="flex justify-between text-slate-600">
+            <span>派票毛收入 (<span id="pv-tickets">85</span> 票 × $15)</span>
+            <span class="text-slate-900 font-bold">$<span id="pv-gross">1275</span></span>
+          </div>
+          <div class="flex justify-between text-slate-600">
+            <span>新人抽佣扣減 (10 票 × $3)</span>
+            <span class="text-amber-600 font-semibold">-$30</span>
+          </div>
+          <div class="flex justify-between text-slate-600">
+            <span>已知工單罰款</span>
+            <span class="text-rose-600 font-semibold">-$50</span>
+          </div>
+          <div class="pt-2 border-t border-slate-200 flex justify-between items-center">
+            <span class="font-bold text-slate-800">預估今日實收總工資</span>
+            <span class="text-xl font-black text-emerald-600">$<span id="pv-net">1195</span></span>
+          </div>
+        </div>
+
+        <button onclick="submitRiderData()" class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition shadow-lg shadow-blue-600/20 active:scale-98">
+          🚀 確認提交今日報數數據
+        </button>
+      </div>
+
+      <!-- 提交成功後畫面 -->
+      <div id="rider-success" class="p-5 rounded-2xl bg-emerald-50 border border-emerald-200 text-center space-y-2.5 hidden">
+        <i data-lucide="check-circle-2" class="w-10 h-10 text-emerald-600 mx-auto"></i>
+        <h4 class="font-bold text-sm text-emerald-900">今日報數已成功送達！</h4>
+        <p class="text-xs text-slate-500 leading-relaxed">請前往站長工作台繳回代收現金以平帳。</p>
+        
+        <div class="pt-2 flex gap-2">
+          <button onclick="shareWhatsApp()" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition">
+            轉發 WhatsApp 存根
+          </button>
+          <button onclick="resetRider()" class="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-600">
+            修改
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ==================== JavaScript 核心業務與聯動邏輯 ==================== -->
+  <script>
+    const initialList = [
+      { id: 'R01', name: '陳大文', tickets: 85, price: 15, commTickets: 10, penalty: 50, comp: 0, deduct: 0, cod: 1200, codStatus: '待繳回', status: '待確認' },
+      { id: 'R02', name: '張志明', tickets: 60, price: 15, commTickets: 0, penalty: 0, comp: 150, deduct: 20, cod: 450, codStatus: '已繳清', status: '已平帳' },
+      { id: 'R03', name: '黃志強', tickets: 100, price: 15, commTickets: 15, penalty: 0, comp: 0, deduct: 0, cod: 2100, codStatus: '待繳回', status: '待確認' }
+    ];
+
+    let riders = JSON.parse(JSON.stringify(initialList));
+
+    // 切換視圖
+    function switchTab(tab) {
+      const admin = document.getElementById('tab-admin');
+      const rider = document.getElementById('tab-rider');
+      const btnAdmin = document.getElementById('btn-admin');
+      const btnRider = document.getElementById('btn-rider');
+
+      if (tab === 'admin') {
+        admin.classList.remove('hidden');
+        rider.classList.add('hidden');
+        btnAdmin.className = "flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all bg-white text-blue-600 shadow-sm";
+        btnRider.className = "flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-900";
+      } else {
+        admin.classList.add('hidden');
+        rider.classList.remove('hidden');
+        btnRider.className = "flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all bg-white text-blue-600 shadow-sm";
+        btnAdmin.className = "flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-900";
+      }
+    }
+
+    // 渲染管理員表格與重新計算總數
+    function render() {
+      const tbody = document.getElementById('table-body');
+      tbody.innerHTML = '';
+
+      let totalTickets = 0;
+      let totalGross = 0;
+      let totalNet = 0;
+      let totalCod = 0;
+      let pendingCount = 0;
+      let totalDeductions = 0;
+
+      riders.forEach((r, idx) => {
+        const gross = r.tickets * r.price;
+        const commDeduct = r.commTickets * 3; // 新人抽佣 $3/票
+        const deductions = commDeduct + r.penalty + r.comp + r.deduct;
+        const net = gross - deductions;
+        const pendingCod = r.codStatus === '待繳回' ? r.cod : 0;
+
+        totalTickets += r.tickets;
+        totalGross += gross;
+        totalNet += net;
+        totalCod += pendingCod;
+        totalDeductions += (r.penalty + r.comp + r.deduct);
+        if (r.codStatus === '待繳回') pendingCount++;
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50/80 transition-colors";
+        tr.innerHTML = `
+          <td class="py-3 px-4">
+            <div class="font-bold text-slate-900">${r.name}</div>
+            <div class="text-[10px] text-slate-400 font-mono">${r.id}</div>
+          </td>
+          <td class="py-3 px-3 text-center font-bold text-slate-900">${r.tickets} 票</td>
+          <td class="py-3 px-3 text-center text-slate-500">$${r.price}</td>
+          <td class="py-3 px-3 text-center font-semibold text-slate-800">$${gross}</td>
+          
+          <td class="py-3 px-2 text-center">
+            <input type="number" value="${r.commTickets}" onchange="updateRow(${idx}, 'commTickets', this.value)" class="w-14 bg-slate-50 border border-slate-200 rounded-md px-1.5 py-1 text-center text-amber-700 font-bold text-xs focus:outline-none focus:ring-1 focus:ring-blue-500">
+            <div class="text-[9px] text-amber-600 font-medium mt-0.5">(-$${commDeduct})</div>
+          </td>
+
+          <td class="py-3 px-2 text-center">
+            <input type="number" value="${r.penalty}" onchange="updateRow(${idx}, 'penalty', this.value)" class="w-14 bg-slate-50 border border-slate-200 rounded-md px-1.5 py-1 text-center text-rose-600 font-bold text-xs focus:outline-none focus:ring-1 focus:ring-blue-500">
+          </td>
+
+          <td class="py-3 px-2 text-center">
+            <input type="number" value="${r.comp}" onchange="updateRow(${idx}, 'comp', this.value)" class="w-14 bg-slate-50 border border-slate-200 rounded-md px-1.5 py-1 text-center text-rose-600 font-bold text-xs focus:outline-none focus:ring-1 focus:ring-blue-500">
+          </td>
+
+          <td class="py-3 px-2 text-center">
+            <input type="number" value="${r.deduct}" onchange="updateRow(${idx}, 'deduct', this.value)" class="w-14 bg-slate-50 border border-slate-200 rounded-md px-1.5 py-1 text-center text-rose-600 font-bold text-xs focus:outline-none focus:ring-1 focus:ring-blue-500">
+          </td>
+
+          <td class="py-3 px-3 text-center text-sm font-black text-emerald-600 bg-emerald-50/40">
+            $${net}
+          </td>
+
+          <td class="py-3 px-3 text-center">
+            <div class="font-semibold text-slate-800">$${r.cod}</div>
+            <span class="text-[9px] px-1.5 py-0.2 rounded font-bold ${r.codStatus === '已繳清' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}">
+              ${r.codStatus}
+            </span>
+          </td>
+
+          <td class="py-3 px-3 text-center font-bold text-amber-600">
+            $${pendingCod}
+          </td>
+
+          <td class="py-3 px-3 text-center">
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${r.status === '已平帳' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200'}">
+              ${r.status}
+            </span>
+          </td>
+
+          <td class="py-3 px-4 text-right">
+            ${r.status === '待確認' ? `
+              <button onclick="settle(${idx})" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition shadow-sm">
+                確認平帳
+              </button>
+            ` : `
+              <span class="text-[11px] text-emerald-600 font-semibold flex items-center justify-end gap-1">
+                <i data-lucide="check" class="w-3.5 h-3.5"></i> 已結算
+              </span>
+            `}
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      // 更新指標
+      document.getElementById('stat-tickets').innerText = totalTickets + ' 票';
+      document.getElementById('stat-gross').innerText = totalGross.toLocaleString();
+      document.getElementById('stat-net').innerText = '$' + totalNet.toLocaleString();
+      document.getElementById('stat-cod').innerText = '$' + totalCod.toLocaleString();
+      document.getElementById('stat-pending-count').innerText = pendingCount;
+      document.getElementById('stat-deductions').innerText = '-$' + totalDeductions.toLocaleString();
+
+      lucide.createIcons();
+    }
+
+    function updateRow(idx, field, val) {
+      riders[idx][field] = Number(val) || 0;
+      render();
+    }
+
+    function settle(idx) {
+      riders[idx].status = '已平帳';
+      riders[idx].codStatus = '已繳清';
+      render();
+    }
+
+    function resetData() {
+      riders = JSON.parse(JSON.stringify(initialList));
+      render();
+    }
+
+    function exportCSV() {
+      alert('已成功生成並匯出今日單兵財務對數表 (CSV/Excel)！');
+    }
+
+    // 步兵手機端聯動
+    function recalcRiderPreview() {
+      const tickets = Number(document.getElementById('rider-tickets').value) || 0;
+      const gross = tickets * 15;
+      const net = gross - 30 - 50;
+
+      document.getElementById('pv-tickets').innerText = tickets;
+      document.getElementById('pv-gross').innerText = gross;
+      document.getElementById('pv-net').innerText = net;
+    }
+
+    function submitRiderData() {
+      const t = Number(document.getElementById('rider-tickets').value) || 0;
+      const c = Number(document.getElementById('rider-cod').value) || 0;
+      
+      riders[0].tickets = t;
+      riders[0].cod = c;
+      riders[0].status = '待確認';
+      riders[0].codStatus = '待繳回';
+
+      document.getElementById('rider-form').classList.add('hidden');
+      document.getElementById('rider-success').classList.remove('hidden');
+      render();
+    }
+
+    function resetRider() {
+      document.getElementById('rider-form').classList.remove('hidden');
+      document.getElementById('rider-success').classList.add('hidden');
+    }
+
+    function shareWhatsApp() {
+      const msg = `【陳大文 (R01) 今日完工報數】\n📦 派送票量: ${riders[0].tickets} 票\n💵 代收現金 (COD): $${riders[0].cod}\n請站長核對並平帳！`;
+      navigator.clipboard?.writeText(msg);
+      alert('已複製報數存根至剪貼簿，可直接發送至 WhatsApp！');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      render();
+      recalcRiderPreview();
+    });
+  </script>
+</body>
+</html>
