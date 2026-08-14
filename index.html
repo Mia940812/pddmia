@@ -2,1249 +2,237 @@
 <html lang="zh-HK">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Mia組 - 派貨員獨立報數與對數結算系統</title>
-  <!-- Tailwind CSS & Lucide Icons -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>圍欄管理與排班系統</title>
   <style>
-    body { 
-      font-family: 'Plus Jakarta Sans', 'Noto Sans TC', system-ui, -apple-system, sans-serif;
-      -webkit-tap-highlight-color: transparent;
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --secondary: #059669;
+      --secondary-hover: #047857;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
     }
-    input[type=number]::-webkit-inner-spin-button, 
-    input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang HK", "Microsoft JhengHei", sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      padding: 16px;
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* 頁頂快捷入口區域 */
+    .top-action-bar {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    /* 電腦版：自動並排成雙欄 */
+    @media (min-width: 768px) {
+      .top-action-bar {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    /* 快捷入口卡片樣式 */
+    .action-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .action-card h3 {
+      font-size: 1.15rem;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .action-card p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-bottom: 16px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 16px;
+      border-radius: 8px;
+      border: none;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      width: 100%;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-blue {
+      background-color: var(--primary);
+      color: #fff;
+    }
+    .btn-blue:hover {
+      background-color: var(--primary-hover);
+    }
+
+    .btn-green {
+      background-color: var(--secondary);
+      color: #fff;
+    }
+    .btn-green:hover {
+      background-color: var(--secondary-hover);
+    }
+
+    /* 表單區塊（點擊後展示） */
+    .form-section {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 24px;
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+      margin-top: 16px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    @media (min-width: 640px) {
+      .form-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+      .form-full {
+        grid-column: span 2;
+      }
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-group label {
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .form-control {
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 1rem;
+      outline: none;
+      background-color: #fff;
+    }
+
+    .form-control:focus {
+      border-color: var(--primary);
+    }
+
+    textarea.form-control {
+      resize: vertical;
+      min-height: 80px;
+    }
   </style>
 </head>
-<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col antialiased overflow-x-hidden">
+<body>
 
-  <!-- ==================== 0. 登入門禁畫面 (完全不洩漏帳號密碼) ==================== -->
-  <div id="view-login" class="flex-1 flex items-center justify-center p-4 min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950">
-    <div class="w-full max-w-sm bg-white rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6">
-      
-      <div class="text-center space-y-2">
-        <div class="inline-flex h-12 px-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 items-center justify-center text-white shadow-lg shadow-blue-500/30 font-black text-lg tracking-wider">
-          Mia組
-        </div>
-        <h2 class="text-lg font-extrabold text-slate-900">派件報數與薪酬結算系統</h2>
-        <p class="text-xs text-slate-500">請輸入由總管理員分派的帳號與密碼</p>
-      </div>
-
-      <div class="space-y-4 text-xs">
-        <div>
-          <label class="font-bold text-slate-700 block mb-1.5">登入帳號 / 步兵編號 (ID)</label>
-          <input id="login-username" type="text" placeholder="請輸入帳號或編號" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition uppercase">
-        </div>
-
-        <div>
-          <label class="font-bold text-slate-700 block mb-1.5">登入密碼</label>
-          <input id="login-password" type="password" placeholder="請輸入密碼" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition">
-        </div>
-
-        <div id="login-error-msg" class="p-2.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-600 font-bold text-[11px] text-center hidden">
-          帳號或密碼不正確，請重新輸入！
-        </div>
-
-        <button onclick="handleLogin()" class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold transition shadow-lg shadow-blue-600/30 active:scale-98 flex items-center justify-center gap-2">
-          <i data-lucide="log-in" class="w-4 h-4"></i> 安全登入系統
-        </button>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- ==================== 系統主體區域 (登入後解鎖) ==================== -->
-  <div id="app-container" class="hidden flex-1 flex flex-col min-h-screen">
+  <div class="container">
     
-    <!-- 頂部全域導航列 -->
-    <header class="bg-white border-b border-slate-200 px-4 sm:px-6 py-3 sticky top-0 z-50 shadow-sm">
-      <div class="max-w-7xl mx-auto flex items-center justify-between gap-3">
-        
-        <div class="flex items-center gap-2.5">
-          <div class="h-9 px-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20 font-black text-sm tracking-wider flex-shrink-0">
-            Mia組
-          </div>
-          <div>
-            <div class="flex items-center gap-1.5">
-              <h1 class="font-extrabold text-sm sm:text-base text-slate-900 leading-tight">派貨員報數與薪酬結算系統</h1>
-              <span id="header-role-badge" class="text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-bold leading-none">身份</span>
-            </div>
-            <p id="header-user-info" class="text-[11px] text-slate-500 hidden sm:block">登入中</p>
-          </div>
-        </div>
-
-        <button onclick="handleLogout()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border border-slate-200">
-          <i data-lucide="log-out" class="w-3.5 h-3.5"></i> 登出
-        </button>
-
-      </div>
-    </header>
-
-    <!-- ==================== 1. 總管理員全盤工資結算與清場視圖 (只有 Mia 看得到) ==================== -->
-    <main id="view-admin" class="flex-1 p-3 sm:p-6 space-y-4 sm:space-y-6 max-w-7xl w-full mx-auto hidden">
+    <!-- 頁頂快捷入口 (頂部固定/優先顯示) -->
+    <section class="top-action-bar">
       
-      <!-- 頂部 4 大統計指標卡片 -->
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
-        <div class="p-3.5 sm:p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between">
-          <div>
-            <div class="text-[11px] sm:text-xs font-semibold text-slate-500">今日全隊總票量</div>
-            <div id="adm-stat-tickets" class="text-xl sm:text-2xl font-black text-slate-900 mt-1">0 票</div>
-          </div>
-          <div class="text-[11px] sm:text-xs text-blue-600 font-semibold mt-2 flex items-center justify-between">
-            <span>簽收: <b id="adm-stat-signed">0</b> 件</span>
-            <span class="text-rose-600 font-bold">退款: <b id="adm-stat-refunded">0</b> 件</span>
-          </div>
-        </div>
-
-        <div class="p-3.5 sm:p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between">
-          <div>
-            <div class="text-[11px] sm:text-xs font-semibold text-slate-500">圍欄清場待攬收殘留</div>
-            <div id="adm-stat-pending-pickup" class="text-xl sm:text-2xl font-black text-slate-700 mt-1">0 件殘留</div>
-          </div>
-          <div class="text-[10px] sm:text-xs text-slate-500 font-medium mt-2 flex items-center gap-1">
-            <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-600 flex-shrink-0"></i> <span id="adm-stat-pending-pickup-riders">0</span> 人圍欄待攬收異常
-          </div>
-        </div>
-
-        <div class="p-3.5 sm:p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between">
-          <div>
-            <div class="text-[11px] sm:text-xs font-semibold text-slate-500">今日應發總工資</div>
-            <div id="adm-stat-net" class="text-xl sm:text-2xl font-black text-emerald-600 mt-1">$0</div>
-          </div>
-          <div class="text-[10px] sm:text-xs text-emerald-600 font-medium mt-2">已扣除工單、扣糧與抽佣</div>
-        </div>
-
-        <div class="p-3.5 sm:p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between">
-          <div>
-            <div class="text-[11px] sm:text-xs font-semibold text-slate-500">今天出的糧 / 剩餘結欠</div>
-            <div class="text-sm font-black mt-1 space-y-0.5">
-              <div class="text-indigo-600">已轉出: <span id="adm-stat-paid-today">$0</span></div>
-              <div class="text-rose-600">總欠款: <span id="adm-stat-debt">$0</span></div>
-            </div>
-          </div>
-          <div class="text-[10px] text-slate-400 mt-1">依個別糧期排定過數</div>
-        </div>
-      </div>
-
-      <!-- 管理員操作列 -->
-      <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 bg-white p-3 sm:p-4 rounded-2xl border border-slate-200/80 shadow-sm">
-        <div class="flex items-center gap-2">
-          <span class="text-xs font-bold text-slate-700 whitespace-nowrap">篩選隊伍:</span>
-          <select id="adm-filter-team" onchange="renderAdminView()" class="w-full sm:w-auto bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none">
-            <option value="all">全部隊伍 (全體步兵)</option>
-            <option value="Mia自營隊">⭐ Mia 自營隊 (KM001+ 直屬)</option>
-            <option value="景鴻隊">A 隊 (A001 景鴻隊)</option>
-            <option value="詠豪隊">B 隊 (B001 詠豪隊)</option>
-            <option value="俊華隊">C 隊 (C001 俊華隊)</option>
-          </select>
-        </div>
-
-        <div class="flex items-center gap-2">
-          <button onclick="openAddRiderModal()" class="flex-1 sm:flex-initial justify-center px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-xs font-bold text-white shadow-sm flex items-center gap-1.5 transition active:scale-95">
-            <i data-lucide="user-plus" class="w-3.5 h-3.5"></i> ＋ 新增普通步兵帳戶
-          </button>
-          <button onclick="clearAllData()" class="px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-semibold border border-rose-200 transition">
-            清空所有步兵
-          </button>
-        </div>
-      </div>
-
-      <!-- 手機端卡片流 -->
-      <div id="admin-mobile-cards" class="block md:hidden space-y-3"></div>
-
-      <!-- 電腦端寬螢幕表格 (3 分區件數 + 3 分區獨立票價) -->
-      <div class="hidden md:block bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-        <div class="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-          <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2">
-            <span class="px-2 py-0.5 bg-blue-600 text-white rounded text-xs font-black">Mia組</span>
-            全體派貨員薪酬結算、分區件數與 3 區獨立票價明細表
-          </h2>
-          <span class="text-xs text-slate-400">所有分區票價、名字、單號均可直接在表格內修改 (自動儲存)</span>
-        </div>
-
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-xs border-collapse min-w-[2050px]">
-            <thead class="bg-slate-100/70 text-slate-600 font-semibold border-b border-slate-200 text-[11px]">
-              <tr>
-                <th class="py-3 px-4 sticky left-0 bg-slate-100/90 backdrop-blur-sm z-10">步兵姓名 (ID)</th>
-                <th class="py-3 px-2 text-center text-blue-700 bg-blue-50/30">麗港城 (件/單號)</th>
-                <th class="py-3 px-2 text-center text-blue-800 bg-blue-100/40 font-bold">麗港城票價 ($)</th>
-                <th class="py-3 px-2 text-center text-indigo-700 bg-indigo-50/30">工商區 (件/單號)</th>
-                <th class="py-3 px-2 text-center text-indigo-800 bg-indigo-100/40 font-bold">工商票價 ($)</th>
-                <th class="py-3 px-2 text-center text-violet-700 bg-violet-50/30">東區 (件/單號)</th>
-                <th class="py-3 px-2 text-center text-violet-800 bg-violet-100/40 font-bold">東區票價 ($)</th>
-                <th class="py-3 px-2 text-center font-bold">總票量</th>
-                <th class="py-3 px-2 text-center text-emerald-700">已簽收</th>
-                <th class="py-3 px-2 text-center text-rose-700 font-bold bg-rose-50/30">已退款</th>
-                <th class="py-3 px-2 text-center text-amber-700 font-bold bg-amber-50/40">圍欄待攬收</th>
-                <th class="py-3 px-2 text-center font-bold">總金額(毛)</th>
-                <th class="py-3 px-2 text-center text-amber-700 font-bold bg-amber-50/30">隊長抽佣</th>
-                <th class="py-3 px-2 text-center text-rose-600 font-medium">工單罰款</th>
-                <th class="py-3 px-2 text-center text-rose-600 font-medium">賠付扣糧</th>
-                <th class="py-3 px-3 text-center text-emerald-700 font-black bg-emerald-50/50">應發總工資</th>
-                <th class="py-3 px-2 text-center text-orange-600 font-bold bg-orange-50/40">預支借支</th>
-                <th class="py-3 px-3 text-center text-indigo-700 font-black bg-indigo-50/40">今天出的糧</th>
-                <th class="py-3 px-3 text-center text-rose-700 font-black bg-rose-50/50">剩餘結欠 (欠款)</th>
-                <th class="py-3 px-3 text-center text-purple-700 font-bold bg-purple-50/30">出糧糧期</th>
-                <th class="py-3 px-4 text-right">操作</th>
-              </tr>
-            </thead>
-            <tbody id="admin-table-body" class="divide-y divide-slate-100 text-slate-700"></tbody>
-          </table>
-        </div>
-      </div>
-    </main>
-
-    <!-- ==================== 2. 隊長專屬工作台 (只有隊長登入才看得到) ==================== -->
-    <main id="view-captain" class="flex-1 p-3 sm:p-6 space-y-4 max-w-6xl w-full mx-auto hidden">
-      <div class="bg-gradient-to-r from-blue-700 to-indigo-700 rounded-3xl p-5 sm:p-6 text-white shadow-lg flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+      <!-- 入口 1: 新增圍欄 -->
+      <div class="action-card">
         <div>
-          <div class="text-[10px] sm:text-xs text-blue-200 font-bold uppercase tracking-wider">Mia組 • 隊長管理工作台</div>
-          <h2 id="cap-name-display" class="text-xl sm:text-2xl font-black mt-1">隊長工作台</h2>
-          <p class="text-xs text-blue-100 mt-1">檢視轄下隊員報數，查閱分區件數、快件單號與 3 區票價。</p>
+          <h3>📍 新增圍欄</h3>
+          <p>設定新的地理區域範圍、工作圍欄及劃分派送區域。</p>
         </div>
-        <div class="w-full sm:w-auto bg-white/10 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-white/20 text-left sm:text-right">
-          <div class="text-xs text-blue-200">本隊今日總派票量</div>
-          <div id="cap-team-tickets" class="text-xl font-black mt-0.5">0 票</div>
-        </div>
+        <button class="btn btn-blue" onclick="alert('打開新增圍欄視窗')">+ 建立圍欄</button>
       </div>
 
-      <div id="captain-mobile-cards" class="block md:hidden space-y-3"></div>
-
-      <div class="hidden md:block bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-          <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
-            <i data-lucide="users" class="w-4 h-4 text-blue-600"></i> 我負責的隊員名單、件數、單號與 3 區票價 (轄下 002+ 編號)
-          </h3>
+      <!-- 入口 2: 第二天上班同事 -->
+      <div class="action-card">
+        <div>
+          <h3>🚶 第二天上班同事排班</h3>
+          <p>安排翌日出勤步兵名單、上班時間及特別工作備註。</p>
         </div>
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-xs border-collapse min-w-[1350px]">
-            <thead class="bg-slate-100/70 text-slate-600 font-semibold border-b border-slate-200 text-[11px]">
-              <tr>
-                <th class="py-3 px-4 sticky left-0 bg-slate-100/90 z-10">隊員姓名 (ID)</th>
-                <th class="py-3 px-2 text-center text-blue-700">麗港城 (件/單號)</th>
-                <th class="py-3 px-2 text-center text-blue-800 font-bold bg-blue-50/40">麗港城票價 ($)</th>
-                <th class="py-3 px-2 text-center text-indigo-700">工商區 (件/單號)</th>
-                <th class="py-3 px-2 text-center text-indigo-800 font-bold bg-indigo-50/40">工商票價 ($)</th>
-                <th class="py-3 px-2 text-center text-violet-700">東區 (件/單號)</th>
-                <th class="py-3 px-2 text-center text-violet-800 font-bold bg-violet-50/40">東區票價 ($)</th>
-                <th class="py-3 px-2 text-center font-bold">總票量</th>
-                <th class="py-3 px-2 text-center text-emerald-700">已簽收</th>
-                <th class="py-3 px-2 text-center text-rose-700 font-bold">已退款</th>
-                <th class="py-3 px-3 text-center text-amber-700 font-bold">圍欄待攬收</th>
-                <th class="py-3 px-3 text-center text-amber-700 font-bold">隊長抽佣 ($)</th>
-                <th class="py-3 px-3 text-center text-emerald-700 font-bold">預估工資</th>
-              </tr>
-            </thead>
-            <tbody id="captain-table-body" class="divide-y divide-slate-100 text-slate-700"></tbody>
-          </table>
-        </div>
+        <button class="btn btn-green" onclick="document.getElementById('duty-form').scrollIntoView({behavior: 'smooth'})">+ 登記步兵排班</button>
       </div>
-    </main>
 
-    <!-- ==================== 3. 步兵獨立報數端 (步兵登入強制鎖死在此) ==================== -->
-    <main id="view-rider" class="flex-1 p-3.5 hidden flex justify-center items-start pt-2 sm:pt-6">
-      <div class="w-full max-w-lg bg-white border border-slate-200 rounded-3xl p-5 sm:p-6 shadow-xl space-y-4">
-        
-        <div class="flex justify-between items-start border-b border-slate-100 pb-3">
-          <div>
-            <div class="text-[11px] text-slate-400 font-medium flex items-center gap-1">
-              <span class="font-bold text-blue-600">Mia組</span> • 步兵個人報數
-            </div>
-            <h3 id="rider-name-display" class="text-lg font-extrabold text-slate-900 mt-0.5">
-              步兵姓名 <span id="rider-id-badge" class="text-xs px-2 py-0.5 bg-blue-50 text-blue-700 rounded-md font-mono font-bold">ID</span>
-            </h3>
-            <div id="rider-team-display" class="text-xs text-slate-500 font-semibold mt-0.5">所屬隊伍</div>
-          </div>
-          <div class="text-right">
-            <div id="rider-payday-display" class="text-[10px] text-purple-700 font-bold bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
-              糧期: 隔日結算
-            </div>
-          </div>
-        </div>
+    </section>
 
-        <!-- 步兵分區票價標籤列 -->
-        <div class="grid grid-cols-3 gap-1.5 text-center text-[11px]">
-          <div class="bg-blue-50 border border-blue-200 text-blue-800 p-1.5 rounded-xl font-bold">
-            麗港城: $<span id="rider-p-laguna">4</span>/件
-          </div>
-          <div class="bg-indigo-50 border border-indigo-200 text-indigo-800 p-1.5 rounded-xl font-bold">
-            工商區: $<span id="rider-p-industrial">5</span>/件
-          </div>
-          <div class="bg-violet-50 border border-violet-200 text-violet-800 p-1.5 rounded-xl font-bold">
-            東區: $<span id="rider-p-eastern">4</span>/件
-          </div>
-        </div>
-
-        <div id="rider-form" class="space-y-4">
+    <!-- 翌日上班同事登記表單示範 -->
+    <section id="duty-form" class="form-section">
+      <h2 style="margin-bottom: 16px; font-size: 1.25rem;">登記翌日步兵上班資料</h2>
+      
+      <form onsubmit="event.preventDefault(); alert('提交成功！');">
+        <div class="form-grid">
           
-          <!-- 1. 麗港城件數與單號 -->
-          <div class="p-3 bg-blue-50/50 rounded-2xl border border-blue-100 space-y-2">
-            <div class="flex justify-between items-center">
-              <label class="text-xs font-bold text-blue-800">📍 觀塘麗港城 ($<span id="txt-p-laguna">4</span>/件)</label>
-              <div class="flex items-center gap-1">
-                <span class="text-[11px] text-slate-500 font-medium">件數:</span>
-                <input id="inp-laguna" type="number" value="0" oninput="recalcRiderTally()" class="w-16 bg-white border border-blue-300 rounded-lg p-1.5 text-center font-bold text-blue-700 text-sm">
-              </div>
-            </div>
-            <div>
-              <textarea id="inp-laguna-nos" rows="2" placeholder="請在此貼上/輸入麗港城快件單號..." class="w-full bg-white border border-blue-200 rounded-xl p-2 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-blue-500"></textarea>
-            </div>
-          </div>
-
-          <!-- 2. 工商區件數與單號 -->
-          <div class="p-3 bg-indigo-50/50 rounded-2xl border border-indigo-100 space-y-2">
-            <div class="flex justify-between items-center">
-              <label class="text-xs font-bold text-indigo-800">🏢 觀塘工商區 ($<span id="txt-p-industrial">5</span>/件)</label>
-              <div class="flex items-center gap-1">
-                <span class="text-[11px] text-slate-500 font-medium">件數:</span>
-                <input id="inp-industrial" type="number" value="0" oninput="recalcRiderTally()" class="w-16 bg-white border border-indigo-300 rounded-lg p-1.5 text-center font-bold text-indigo-700 text-sm">
-              </div>
-            </div>
-            <div>
-              <textarea id="inp-industrial-nos" rows="2" placeholder="請在此貼上/輸入工商區快件單號..." class="w-full bg-white border border-indigo-200 rounded-xl p-2 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-indigo-500"></textarea>
-            </div>
-          </div>
-
-          <!-- 3. 東區件數與單號 -->
-          <div class="p-3 bg-violet-50/50 rounded-2xl border border-violet-100 space-y-2">
-            <div class="flex justify-between items-center">
-              <label class="text-xs font-bold text-violet-800">🏙️ 東區 ($<span id="txt-p-eastern">4</span>/件)</label>
-              <div class="flex items-center gap-1">
-                <span class="text-[11px] text-slate-500 font-medium">件數:</span>
-                <input id="inp-eastern" type="number" value="0" oninput="recalcRiderTally()" class="w-16 bg-white border border-violet-300 rounded-lg p-1.5 text-center font-bold text-violet-700 text-sm">
-              </div>
-            </div>
-            <div>
-              <textarea id="inp-eastern-nos" rows="2" placeholder="請在此貼上/輸入東區快件單號..." class="w-full bg-white border border-violet-200 rounded-xl p-2 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-violet-500"></textarea>
-            </div>
-          </div>
-
-          <!-- 簽收與退款 -->
-          <div class="grid grid-cols-2 gap-2">
-            <div>
-              <label class="text-xs font-bold text-emerald-700 block mb-1">✅ 今日已簽收件 (件)</label>
-              <input id="inp-signed" type="number" value="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-base font-bold text-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-500">
-            </div>
-            <div>
-              <label class="text-xs font-bold text-rose-700 block mb-1">🔄 今日已退款件 (件)</label>
-              <input id="inp-refunded" type="number" value="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-base font-bold text-rose-600 focus:outline-none focus:ring-2 focus:ring-rose-500">
-            </div>
-          </div>
-
-          <!-- 圍欄清場狀態 -->
-          <div class="p-3 bg-amber-50/60 rounded-2xl border border-amber-200/80 space-y-1.5">
-            <label class="text-xs font-bold text-amber-900 block flex items-center gap-1">
-              <i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-amber-600"></i> 當天該圍欄已清場，但仍有待攬收記錄 (件)
-            </label>
-            <input id="inp-pending-pickup" type="number" value="0" placeholder="無待攬收填 0" class="w-full bg-white border border-amber-300 rounded-xl p-2.5 text-sm font-bold text-amber-800 focus:outline-none focus:ring-2 focus:ring-amber-500">
-          </div>
-
-          <!-- 即時工資試算卡片 -->
-          <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2 text-xs">
-            <div class="flex justify-between text-slate-600">
-              <span>總派票量: <b id="pv-total-t">0</b> 票</span>
-              <span>分區累計金額: <b class="text-slate-900">$<span id="pv-gross-amt">0</span></b></span>
-            </div>
-            <div class="flex justify-between text-slate-500 text-[11px] pt-1">
-              <span>麗港:<b id="pv-laguna">0</b> | 工商:<b id="pv-industrial">0</b> | 東區:<b id="pv-eastern">0</b></span>
-              <span>簽收: <b id="pv-signed-txt" class="text-emerald-600">0</b> | 退款: <b id="pv-refund-txt" class="text-rose-600">0</b></span>
-            </div>
-            <div class="pt-2.5 border-t border-slate-200 flex justify-between items-center">
-              <span class="font-bold text-slate-800">今日預估工資 (毛額)</span>
-              <span class="text-xl font-black text-emerald-600">$<span id="pv-net-amt">0</span></span>
-            </div>
-          </div>
-
-          <button onclick="submitRiderTally()" class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition shadow-lg shadow-blue-600/20 active:scale-98">
-            🚀 確認提交今日報數與快件單號
-          </button>
-        </div>
-
-        <div id="rider-success-card" class="p-5 rounded-2xl bg-emerald-50 border border-emerald-200 text-center space-y-2 hidden">
-          <i data-lucide="check-circle-2" class="w-10 h-10 text-emerald-600 mx-auto"></i>
-          <h4 class="font-bold text-sm text-emerald-900">今日報數與單號已送達 Mia組 工作台！</h4>
-          <p class="text-xs text-slate-500">總管理員核對單號、扣糧與預支後，將於指定出糧日發放。</p>
-          <button onclick="resetRiderForm()" class="mt-2 text-xs text-blue-600 font-semibold underline">修改報數</button>
-        </div>
-
-      </div>
-    </main>
-
-  </div>
-
-  <!-- 彈窗 1：查看 / 編輯快件單號彈窗 -->
-  <div id="modal-tracking-numbers" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
-    <div class="bg-white rounded-3xl p-5 sm:p-6 max-w-lg w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
-      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-        <div>
-          <h3 id="modal-track-title" class="font-bold text-base text-slate-900 flex items-center gap-2">
-            <i data-lucide="package" class="w-5 h-5 text-blue-600"></i> 快件單號明細
-          </h3>
-          <p id="modal-track-subtitle" class="text-xs text-slate-500 mt-0.5">查看及編輯各分區的快件單號</p>
-        </div>
-        <button onclick="closeTrackingModal()" class="text-slate-400 hover:text-slate-600 p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
-      </div>
-
-      <div class="space-y-3 text-xs">
-        <div>
-          <label class="font-bold text-blue-800 block mb-1">📍 觀塘麗港城快件單號</label>
-          <textarea id="modal-inp-laguna-nos" rows="3" placeholder="無單號" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white"></textarea>
-        </div>
-        <div>
-          <label class="font-bold text-indigo-800 block mb-1">🏢 觀塘工商區快件單號</label>
-          <textarea id="modal-inp-industrial-nos" rows="3" placeholder="無單號" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"></textarea>
-        </div>
-        <div>
-          <label class="font-bold text-violet-800 block mb-1">🏙️ 東區快件單號</label>
-          <textarea id="modal-inp-eastern-nos" rows="3" placeholder="無單號" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-mono focus:outline-none focus:ring-2 focus:ring-violet-500 focus:bg-white"></textarea>
-        </div>
-      </div>
-
-      <div class="flex gap-2 pt-2">
-        <button onclick="saveTrackingModal()" class="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition">儲存快件單號</button>
-        <button onclick="closeTrackingModal()" class="px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-semibold">關閉</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 彈窗 2：總管理員新增普通步兵帳戶 (含 3 分區獨立票價) -->
-  <div id="modal-add-rider" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
-    <div class="bg-white rounded-3xl p-5 sm:p-6 max-w-md w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
-      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-        <h3 class="font-bold text-sm sm:text-base text-slate-900 flex items-center gap-2">
-          <i data-lucide="user-plus" class="w-5 h-5 text-blue-600"></i> 新增普通步兵帳戶
-        </h3>
-        <button onclick="closeAddRiderModal()" class="text-slate-400 hover:text-slate-600 p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
-      </div>
-
-      <div class="space-y-3 text-xs">
-        <div>
-          <label class="font-bold text-slate-700 block mb-1">步兵名字 (由總管理員自訂輸入)</label>
-          <input id="new-rider-name" type="text" placeholder="例如：張小明 / 志偉 / 阿強" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500">
-        </div>
-
-        <div>
-          <label class="font-bold text-slate-700 block mb-1">歸屬隊伍 (系統將自動派發專屬編號)</label>
-          <select id="new-rider-team" onchange="autoFillTeamPrice(this.value)" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <option value="Mia自營隊">⭐ Mia 自營隊 (自營步兵 - 自動派發 KM001+)</option>
-            <option value="景鴻隊">A 隊 (隊長景鴻隊 - 自動派發 A002+)</option>
-            <option value="詠豪隊">B 隊 (隊長詠豪隊 - 自動派發 B002+)</option>
-            <option value="俊華隊">C 隊 (隊長俊華隊 - 自動派發 C002+)</option>
-          </select>
-        </div>
-
-        <!-- 3 個分區獨立票價輸入框 -->
-        <div class="grid grid-cols-3 gap-2">
-          <div>
-            <label class="font-bold text-blue-700 block mb-1">麗港城票價 ($)</label>
-            <input id="new-price-laguna" type="number" step="0.5" value="4" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500">
-          </div>
-          <div>
-            <label class="font-bold text-indigo-700 block mb-1">工商票價 ($)</label>
-            <input id="new-price-industrial" type="number" step="0.5" value="5" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500">
-          </div>
-          <div>
-            <label class="font-bold text-violet-700 block mb-1">東區票價 ($)</label>
-            <input id="new-price-eastern" type="number" step="0.5" value="4" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-bold focus:outline-none focus:ring-2 focus:ring-violet-500">
-          </div>
-        </div>
-
-        <div>
-          <label class="font-bold text-purple-700 block mb-1">出糧糧期</label>
-          <select id="new-rider-payday" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-bold focus:outline-none focus:ring-2 focus:ring-purple-500">
-            <option value="隔日結算">隔日結算</option>
-            <option value="日結 (即日)">日結 (即日)</option>
-            <option value="逢週五 (週結)">逢週五 (週結)</option>
-            <option value="每月 7 號 (月結)">每月 7 號 (月結)</option>
-            <option value="每月 15 號 (月結)">每月 15 號 (月結)</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="flex gap-2 pt-2">
-        <button onclick="saveNewRider()" class="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition">確認建立並加入隊伍</button>
-        <button onclick="closeAddRiderModal()" class="px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-semibold">取消</button>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    // 初始基底：隊長 A ($4/$5/$4), 隊長 B ($4/$5/$4), 隊長 C ($4/$4.5/$4)
-    const initialBase = [
-      { id: 'A001', name: '隊長 A (景鴻)', role: '隊長', team: '景鴻隊', prefix: 'A', 
-        laguna: 0, lagunaNos: '', priceLaguna: 4,
-        industrial: 0, industrialNos: '', priceIndustrial: 5,
-        eastern: 0, easternNos: '', priceEastern: 4,
-        signed: 0, refunded: 0, pendingPickup: 0, payday: '逢週五 (週結)', commission: 0, penalty: 0, comp: 0, deduct: 0, advance: 0, paidToday: 0, payoutStatus: '待轉帳' },
-      
-      { id: 'B001', name: '隊長 B (詠豪)', role: '隊長', team: '詠豪隊', prefix: 'B', 
-        laguna: 0, lagunaNos: '', priceLaguna: 4,
-        industrial: 0, industrialNos: '', priceIndustrial: 5,
-        eastern: 0, easternNos: '', priceEastern: 4,
-        signed: 0, refunded: 0, pendingPickup: 0, payday: '每月 7 號 (月結)', commission: 0, penalty: 0, comp: 0, deduct: 0, advance: 0, paidToday: 0, payoutStatus: '待轉帳' },
-      
-      { id: 'C001', name: '隊長 C (俊華)', role: '隊長', team: '俊華隊', prefix: 'C', 
-        laguna: 0, lagunaNos: '', priceLaguna: 4,
-        industrial: 0, industrialNos: '', priceIndustrial: 4.5,
-        eastern: 0, easternNos: '', priceEastern: 4,
-        signed: 0, refunded: 0, pendingPickup: 0, payday: '每月 15 號 (月結)', commission: 0, penalty: 0, comp: 0, deduct: 0, advance: 0, paidToday: 0, payoutStatus: '待轉帳' }
-    ];
-
-    let accounts = JSON.parse(localStorage.getItem('MIA_COURIER_ZONE_PRICE_2026')) || initialBase;
-    let loggedInUser = null;
-    let editingTrackIdx = -1;
-
-    function saveData() {
-      localStorage.setItem('MIA_COURIER_ZONE_PRICE_2026', JSON.stringify(accounts));
-    }
-
-    function clearAllData() {
-      if (confirm('確定要清空所有新增的步兵，只保留 3 位隊長基底嗎？')) {
-        accounts = JSON.parse(JSON.stringify(initialBase));
-        saveData();
-        renderAdminView();
-      }
-    }
-
-    // 登入驗證
-    function handleLogin() {
-      const u = document.getElementById('login-username').value.trim().toUpperCase();
-      const p = document.getElementById('login-password').value.trim();
-      const errBox = document.getElementById('login-error-msg');
-      errBox.classList.add('hidden');
-
-      // 1. 總管理員 Mia 登入
-      if (u === 'ADMIN' && p === 'mia888') {
-        loggedInUser = { role: 'admin', name: '總管理員 Mia' };
-        enterApp();
-        return;
-      }
-
-      // 2. 隊長 A (景鴻 - 密碼 100)
-      if (u === 'A001' && p === '100') {
-        const cap = accounts.find(a => a.id === 'A001');
-        loggedInUser = { role: 'captain', id: 'A001', team: cap.team, name: cap.name };
-        enterApp();
-        return;
-      }
-
-      // 3. 隊長 B (詠豪 - 密碼 201)
-      if (u === 'B001' && p === '201') {
-        const cap = accounts.find(a => a.id === 'B001');
-        loggedInUser = { role: 'captain', id: 'B001', team: cap.team, name: cap.name };
-        enterApp();
-        return;
-      }
-
-      // 4. 隊長 C (俊華 - 密碼 303)
-      if (u === 'C001' && p === '303') {
-        const cap = accounts.find(a => a.id === 'C001');
-        loggedInUser = { role: 'captain', id: 'C001', team: cap.team, name: cap.name };
-        enterApp();
-        return;
-      }
-
-      // 5. 普通步兵登入 (輸入自己的 ID, 密碼 8888)
-      const riderIdx = accounts.findIndex(a => a.id.toUpperCase() === u && a.role !== '隊長');
-      if (riderIdx !== -1 && p === '8888') {
-        loggedInUser = { role: 'rider', idx: riderIdx, ...accounts[riderIdx] };
-        enterApp();
-        return;
-      }
-
-      // 驗證失敗
-      errBox.classList.remove('hidden');
-    }
-
-    function enterApp() {
-      document.getElementById('view-login').classList.add('hidden');
-      document.getElementById('app-container').classList.remove('hidden');
-
-      document.getElementById('view-admin').classList.add('hidden');
-      document.getElementById('view-captain').classList.add('hidden');
-      document.getElementById('view-rider').classList.add('hidden');
-
-      const badge = document.getElementById('header-role-badge');
-      const info = document.getElementById('header-user-info');
-
-      if (loggedInUser.role === 'admin') {
-        badge.innerText = '👑 總管理員';
-        badge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-bold leading-none';
-        info.innerText = 'Mia (全權財務掌控)';
-        document.getElementById('view-admin').classList.remove('hidden');
-        renderAdminView();
-      } else if (loggedInUser.role === 'captain') {
-        badge.innerText = '🎖️ 隊長';
-        badge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 font-bold leading-none';
-        info.innerText = `${loggedInUser.name} (${loggedInUser.id})`;
-        document.getElementById('view-captain').classList.remove('hidden');
-        renderCaptainView(loggedInUser.id);
-      } else if (loggedInUser.role === 'rider') {
-        badge.innerText = '🏃 派貨員';
-        badge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold leading-none';
-        info.innerText = `${loggedInUser.name} (${loggedInUser.id} • ${loggedInUser.team})`;
-        document.getElementById('view-rider').classList.remove('hidden');
-        renderRiderView(loggedInUser.idx);
-      }
-      lucide.createIcons();
-    }
-
-    function handleLogout() {
-      loggedInUser = null;
-      document.getElementById('login-username').value = '';
-      document.getElementById('login-password').value = '';
-      document.getElementById('login-error-msg').classList.add('hidden');
-      document.getElementById('app-container').classList.add('hidden');
-      document.getElementById('view-login').classList.remove('hidden');
-      lucide.createIcons();
-    }
-
-    // 總管理員全盤渲染 (3 分區件數 + 3 分區獨立票價)
-    function renderAdminView() {
-      const filter = document.getElementById('adm-filter-team').value;
-      const tbody = document.getElementById('admin-table-body');
-      const mobileContainer = document.getElementById('admin-mobile-cards');
-      
-      tbody.innerHTML = '';
-      mobileContainer.innerHTML = '';
-
-      let totalTickets = 0;
-      let totalSigned = 0;
-      let totalRefunded = 0;
-      let totalPendingPickup = 0;
-      let pendingPickupRidersCount = 0;
-      let totalNetWage = 0;
-      let totalPaidToday = 0;
-      let totalDebt = 0;
-      let inDebtCount = 0;
-
-      accounts.forEach((acc, idx) => {
-        if (filter !== 'all' && acc.team !== filter) return;
-
-        const ticketCount = (acc.laguna || 0) + (acc.industrial || 0) + (acc.eastern || 0);
-        const pLag = Number(acc.priceLaguna) || 4;
-        const pInd = Number(acc.priceIndustrial) || 5;
-        const pEas = Number(acc.priceEastern) || 4;
-
-        // 分區各自相乘計算總金額毛額
-        const gross = ((acc.laguna || 0) * pLag) + ((acc.industrial || 0) * pInd) + ((acc.eastern || 0) * pEas);
-        const commVal = acc.role === '隊長' ? (acc.commission || 0) : 0;
-        
-        const netWage = gross - commVal - (acc.penalty || 0) - (acc.comp || 0) - (acc.deduct || 0);
-        const netDebt = ((acc.advance || 0) + (acc.paidToday || 0)) - netWage;
-
-        totalTickets += ticketCount;
-        totalSigned += (acc.signed || 0);
-        totalRefunded += (acc.refunded || 0);
-        totalPendingPickup += (acc.pendingPickup || 0);
-        if (acc.pendingPickup > 0) pendingPickupRidersCount++;
-
-        totalNetWage += netWage;
-        totalPaidToday += (acc.paidToday || 0);
-
-        if (netDebt > 0) {
-          totalDebt += netDebt;
-          inDebtCount++;
-        }
-
-        // 手機端卡片 (含 3 區票價即時輸入框)
-        const card = document.createElement('div');
-        card.className = `bg-white rounded-2xl border ${acc.pendingPickup > 0 ? 'border-amber-400 bg-amber-50/20' : 'border-slate-200/90'} p-4 shadow-sm space-y-3`;
-        card.innerHTML = `
-          <div class="flex justify-between items-start border-b border-slate-100 pb-2.5">
-            <div class="flex-1 mr-2">
-              <div class="flex items-center gap-1.5 flex-wrap">
-                <input type="text" value="${acc.name}" onchange="updateAccountFieldStr(${idx}, 'name', this.value)" class="font-extrabold text-base text-slate-900 bg-transparent border-b border-transparent focus:border-blue-500 focus:bg-white px-1 py-0.5 rounded outline-none w-28">
-                <span class="text-xs px-2 py-0.5 rounded font-mono font-bold ${acc.prefix === 'KM' ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' : 'bg-blue-50 text-blue-700 border border-blue-200'}">${acc.id}</span>
-                <span class="text-[10px] px-1.5 py-0.5 rounded font-bold ${acc.role === '隊長' ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' : acc.role === '自營步兵' ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-slate-100 text-slate-600'}">${acc.role}</span>
-              </div>
-              <div class="text-[11px] text-slate-400 mt-0.5">${acc.team}</div>
-            </div>
-            <div class="text-right flex-shrink-0">
-              <div class="text-[10px] font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200">${acc.payday}</div>
-            </div>
-          </div>
-
-          <!-- 3 分區件數與票價 (直接可改) -->
-          <div class="grid grid-cols-3 gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-100 text-xs">
-            <div class="bg-blue-50/50 p-1.5 rounded-lg border border-blue-100 text-center">
-              <div class="text-[10px] text-blue-700 font-bold">麗港城 (件)</div>
-              <input type="number" value="${acc.laguna || 0}" onchange="updateAccountField(${idx}, 'laguna', this.value)" class="w-full bg-white border border-slate-200 rounded p-1 text-center font-bold text-blue-700 mt-1">
-              <div class="flex items-center justify-center gap-0.5 mt-1 text-[10px] text-blue-800 font-bold">
-                $ <input type="number" step="0.5" value="${pLag}" onchange="updateAccountField(${idx}, 'priceLaguna', this.value)" class="w-9 bg-white border border-blue-300 rounded p-0.5 text-center font-bold">/件
-              </div>
-            </div>
-
-            <div class="bg-indigo-50/50 p-1.5 rounded-lg border border-indigo-100 text-center">
-              <div class="text-[10px] text-indigo-700 font-bold">工商區 (件)</div>
-              <input type="number" value="${acc.industrial || 0}" onchange="updateAccountField(${idx}, 'industrial', this.value)" class="w-full bg-white border border-slate-200 rounded p-1 text-center font-bold text-indigo-700 mt-1">
-              <div class="flex items-center justify-center gap-0.5 mt-1 text-[10px] text-indigo-800 font-bold">
-                $ <input type="number" step="0.5" value="${pInd}" onchange="updateAccountField(${idx}, 'priceIndustrial', this.value)" class="w-9 bg-white border border-indigo-300 rounded p-0.5 text-center font-bold">/件
-              </div>
-            </div>
-
-            <div class="bg-violet-50/50 p-1.5 rounded-lg border border-violet-100 text-center">
-              <div class="text-[10px] text-violet-700 font-bold">東區 (件)</div>
-              <input type="number" value="${acc.eastern || 0}" onchange="updateAccountField(${idx}, 'eastern', this.value)" class="w-full bg-white border border-slate-200 rounded p-1 text-center font-bold text-violet-700 mt-1">
-              <div class="flex items-center justify-center gap-0.5 mt-1 text-[10px] text-violet-800 font-bold">
-                $ <input type="number" step="0.5" value="${pEas}" onchange="updateAccountField(${idx}, 'priceEastern', this.value)" class="w-9 bg-white border border-violet-300 rounded p-0.5 text-center font-bold">/件
-              </div>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-3 gap-1.5 text-center text-xs">
-            <div class="bg-emerald-50/50 p-1.5 rounded-xl border border-emerald-100">
-              <div class="text-[10px] text-emerald-700 font-bold">已簽收</div>
-              <input type="number" value="${acc.signed || 0}" onchange="updateAccountField(${idx}, 'signed', this.value)" class="w-full bg-white border border-emerald-200 rounded p-1 text-center font-bold text-emerald-600 mt-1">
-            </div>
-            <div class="bg-rose-50/50 p-1.5 rounded-xl border border-rose-100">
-              <div class="text-[10px] text-rose-700 font-bold">已退款</div>
-              <input type="number" value="${acc.refunded || 0}" onchange="updateAccountField(${idx}, 'refunded', this.value)" class="w-full bg-white border border-rose-200 rounded p-1 text-center font-bold text-rose-600 mt-1">
-            </div>
-            <div class="bg-amber-50/60 p-1.5 rounded-xl border border-amber-200">
-              <div class="text-[10px] text-amber-800 font-bold">圍欄待攬收</div>
-              <input type="number" value="${acc.pendingPickup || 0}" onchange="updateAccountField(${idx}, 'pendingPickup', this.value)" class="w-full bg-white border border-amber-300 rounded p-1 text-center font-bold text-amber-700 mt-1">
-            </div>
-          </div>
-
-          <div class="bg-blue-50/40 p-2 rounded-xl border border-blue-100 flex items-center justify-between text-xs">
-            <span class="text-[11px] text-slate-600 font-semibold">📋 各分區快件單號</span>
-            <button onclick="openTrackingModal(${idx})" class="px-2.5 py-1 bg-white border border-blue-300 text-blue-700 font-bold rounded-lg hover:bg-blue-50 text-[11px] flex items-center gap-1 shadow-sm">
-              <i data-lucide="eye" class="w-3 h-3"></i> 查看/編輯單號
-            </button>
-          </div>
-
-          <div class="grid grid-cols-3 gap-2 text-xs">
-            <div>
-              <label class="text-[10px] text-rose-600 font-semibold block mb-0.5">工單罰款</label>
-              <input type="number" value="${acc.penalty || 0}" onchange="updateAccountField(${idx}, 'penalty', this.value)" class="w-full bg-slate-50 border border-slate-200 rounded p-1.5 text-center font-bold text-rose-600">
-            </div>
-            <div>
-              <label class="text-[10px] text-rose-600 font-semibold block mb-0.5">賠付/扣糧</label>
-              <input type="number" value="${(acc.comp || 0) + (acc.deduct || 0)}" onchange="updateAccountField(${idx}, 'comp', this.value)" class="w-full bg-slate-50 border border-slate-200 rounded p-1.5 text-center font-bold text-rose-600">
-            </div>
-            <div>
-              <label class="text-[10px] text-orange-600 font-semibold block mb-0.5">預支借支</label>
-              <input type="number" value="${acc.advance || 0}" onchange="updateAccountField(${idx}, 'advance', this.value)" class="w-full bg-orange-50/50 border border-orange-200 rounded p-1.5 text-center font-bold text-orange-700">
-            </div>
-          </div>
-
-          <div class="pt-2 border-t border-slate-100 flex justify-between items-center">
-            <div>
-              <div class="text-[10px] text-slate-400">總票量: <b class="text-slate-800">${ticketCount} 票</b></div>
-              <div class="text-base font-black text-emerald-600">工資: $${netWage}</div>
-            </div>
-            <div class="text-right">
-              ${netDebt > 0 ? `
-                <div class="px-2 py-0.5 rounded-full text-xs font-black bg-rose-600 text-white inline-block">
-                  欠款 $${netDebt}
-                </div>
-              ` : `
-                <div class="text-[11px] text-slate-400">無欠款</div>
-              `}
-              <div class="mt-1">
-                ${(acc.paidToday || 0) > 0 ? `
-                  <span class="text-xs font-bold text-indigo-600">已出: $${acc.paidToday}</span>
-                ` : `
-                  <button onclick="payFullWage(${idx}, ${netWage})" class="px-3 py-1 bg-blue-600 text-white rounded-lg text-xs font-bold shadow-sm">
-                    出糧 $${netWage}
-                  </button>
-                `}
-              </div>
-            </div>
-          </div>
-        `;
-        mobileContainer.appendChild(card);
-
-        // 電腦端表格行 (3 區件數 + 3 區獨立票價)
-        const tr = document.createElement('tr');
-        tr.className = `hover:bg-slate-50/80 transition ${acc.pendingPickup > 0 ? 'bg-amber-50/20' : ''}`;
-        tr.innerHTML = `
-          <td class="py-3 px-4 sticky left-0 bg-white shadow-sm z-10">
-            <div class="flex items-center gap-1">
-              <input type="text" value="${acc.name}" onchange="updateAccountFieldStr(${idx}, 'name', this.value)" class="font-bold text-slate-900 bg-transparent border-b border-transparent focus:border-blue-500 focus:bg-slate-50 px-1 py-0.5 rounded outline-none w-28">
-            </div>
-            <div class="text-[10px] text-slate-400 font-mono"><b class="${acc.prefix === 'KM' ? 'text-indigo-600' : 'text-blue-600'}">${acc.id}</b> • ${acc.team} • ${acc.role}</div>
-          </td>
-
-          <!-- 麗港城件數 -->
-          <td class="py-3 px-2 text-center bg-blue-50/30">
-            <div class="flex items-center justify-center gap-1">
-              <input type="number" value="${acc.laguna || 0}" onchange="updateAccountField(${idx}, 'laguna', this.value)" class="w-10 bg-slate-50 border border-slate-200 rounded p-1 text-center font-bold text-blue-700">
-              <button onclick="openTrackingModal(${idx})" title="${acc.lagunaNos || '無單號'}" class="p-1 bg-white border border-blue-200 text-blue-600 rounded hover:bg-blue-50"><i data-lucide="file-text" class="w-3.5 h-3.5"></i></button>
-            </div>
-          </td>
-
-          <!-- 麗港城票價 -->
-          <td class="py-3 px-2 text-center bg-blue-100/40">
-            <input type="number" step="0.5" value="${pLag}" onchange="updateAccountField(${idx}, 'priceLaguna', this.value)" class="w-12 bg-white border border-blue-300 rounded p-1 text-center font-black text-blue-700 focus:ring-2 focus:ring-blue-500">
-          </td>
-
-          <!-- 工商區件數 -->
-          <td class="py-3 px-2 text-center bg-indigo-50/30">
-            <div class="flex items-center justify-center gap-1">
-              <input type="number" value="${acc.industrial || 0}" onchange="updateAccountField(${idx}, 'industrial', this.value)" class="w-10 bg-slate-50 border border-slate-200 rounded p-1 text-center font-bold text-indigo-700">
-              <button onclick="openTrackingModal(${idx})" title="${acc.industrialNos || '無單號'}" class="p-1 bg-white border border-indigo-200 text-indigo-600 rounded hover:bg-indigo-50"><i data-lucide="file-text" class="w-3.5 h-3.5"></i></button>
-            </div>
-          </td>
-
-          <!-- 工商區票價 -->
-          <td class="py-3 px-2 text-center bg-indigo-100/40">
-            <input type="number" step="0.5" value="${pInd}" onchange="updateAccountField(${idx}, 'priceIndustrial', this.value)" class="w-12 bg-white border border-indigo-300 rounded p-1 text-center font-black text-indigo-700 focus:ring-2 focus:ring-indigo-500">
-          </td>
-
-          <!-- 東區件數 -->
-          <td class="py-3 px-2 text-center bg-violet-50/30">
-            <div class="flex items-center justify-center gap-1">
-              <input type="number" value="${acc.eastern || 0}" onchange="updateAccountField(${idx}, 'eastern', this.value)" class="w-10 bg-slate-50 border border-slate-200 rounded p-1 text-center font-bold text-violet-700">
-              <button onclick="openTrackingModal(${idx})" title="${acc.easternNos || '無單號'}" class="p-1 bg-white border border-violet-200 text-violet-600 rounded hover:bg-violet-50"><i data-lucide="file-text" class="w-3.5 h-3.5"></i></button>
-            </div>
-          </td>
-
-          <!-- 東區票價 -->
-          <td class="py-3 px-2 text-center bg-violet-100/40">
-            <input type="number" step="0.5" value="${pEas}" onchange="updateAccountField(${idx}, 'priceEastern', this.value)" class="w-12 bg-white border border-violet-300 rounded p-1 text-center font-black text-violet-700 focus:ring-2 focus:ring-violet-500">
-          </td>
-
-          <td class="py-3 px-2 text-center font-black text-slate-900">${ticketCount}</td>
-          <td class="py-3 px-2 text-center">
-            <input type="number" value="${acc.signed || 0}" onchange="updateAccountField(${idx}, 'signed', this.value)" class="w-10 bg-slate-50 border border-slate-200 rounded p-1 text-center font-bold text-emerald-600">
-          </td>
-
-          <td class="py-3 px-2 text-center bg-rose-50/30">
-            <input type="number" value="${acc.refunded || 0}" onchange="updateAccountField(${idx}, 'refunded', this.value)" class="w-10 bg-white border border-rose-300 rounded p-1 text-center font-bold text-rose-600">
-          </td>
-
-          <td class="py-3 px-2 text-center bg-amber-50/40">
-            <div class="flex items-center justify-center gap-1">
-              <input type="number" value="${acc.pendingPickup || 0}" onchange="updateAccountField(${idx}, 'pendingPickup', this.value)" class="w-10 bg-white border ${acc.pendingPickup > 0 ? 'border-amber-500 bg-amber-50 text-amber-700 font-black' : 'border-slate-200'} rounded p-1 text-center font-bold">
-              ${acc.pendingPickup > 0 ? `<span class="text-[10px] text-amber-600 font-bold">⚠️</span>` : ''}
-            </div>
-          </td>
-
-          <td class="py-3 px-2 text-center font-bold text-slate-800">$${gross}</td>
-          
-          <td class="py-3 px-2 text-center bg-amber-50/30">
-            ${acc.role === '隊長' ? `
-              <input type="number" value="${acc.commission || 0}" onchange="updateAccountField(${idx}, 'commission', this.value)" class="w-12 bg-white border border-amber-300 rounded p-1 text-center font-bold text-amber-700">
-            ` : `<span class="text-slate-300">-</span>`}
-          </td>
-
-          <td class="py-3 px-2 text-center">
-            <input type="number" value="${acc.penalty || 0}" onchange="updateAccountField(${idx}, 'penalty', this.value)" class="w-11 bg-slate-50 border border-slate-200 rounded p-1 text-center font-bold text-rose-600">
-          </td>
-
-          <td class="py-3 px-2 text-center">
-            <input type="number" value="${(acc.comp || 0) + (acc.deduct || 0)}" onchange="updateAccountField(${idx}, 'comp', this.value)" class="w-11 bg-slate-50 border border-slate-200 rounded p-1 text-center font-bold text-rose-600">
-          </td>
-
-          <td class="py-3 px-3 text-center font-black text-emerald-600 text-sm bg-emerald-50/50 whitespace-nowrap">
-            $${netWage}
-          </td>
-
-          <td class="py-3 px-2 text-center bg-orange-50/40">
-            <input type="number" value="${acc.advance || 0}" onchange="updateAccountField(${idx}, 'advance', this.value)" class="w-12 bg-white border border-orange-300 rounded p-1 text-center font-bold text-orange-700">
-          </td>
-
-          <td class="py-3 px-3 text-center bg-indigo-50/40">
-            <div class="flex items-center justify-center gap-0.5">
-              <span class="text-indigo-700 font-bold">$</span>
-              <input type="number" value="${acc.paidToday || 0}" onchange="updateAccountField(${idx}, 'paidToday', this.value)" class="w-14 bg-white border border-indigo-300 rounded p-1 text-center font-black text-indigo-700 focus:outline-none focus:ring-1 focus:ring-indigo-500">
-            </div>
-          </td>
-
-          <td class="py-3 px-3 text-center bg-rose-50/50 whitespace-nowrap">
-            ${netDebt > 0 ? `
-              <span class="px-2 py-0.5 rounded-full text-xs font-black bg-rose-600 text-white shadow-sm inline-block">
-                欠款 $${netDebt}
-              </span>
-            ` : `
-              <span class="text-slate-400 font-medium text-[11px]">- (無欠款)</span>
-            `}
-          </td>
-
-          <td class="py-3 px-2 text-center bg-purple-50/30 whitespace-nowrap">
-            <select onchange="updateAccountFieldStr(${idx}, 'payday', this.value)" class="bg-white border border-purple-200 rounded-md px-1.5 py-1 text-[11px] font-bold text-purple-800 focus:outline-none focus:ring-1 focus:ring-purple-500">
-              <option value="隔日結算" ${acc.payday === '隔日結算' ? 'selected' : ''}>隔日結算</option>
-              <option value="日結 (即日)" ${acc.payday === '日結 (即日)' ? 'selected' : ''}>日結 (即日)</option>
-              <option value="逢週五 (週結)" ${acc.payday === '逢週五 (週結)' ? 'selected' : ''}>逢週五 (週結)</option>
-              <option value="每月 7 號 (月結)" ${acc.payday === '每月 7 號 (月結)' ? 'selected' : ''}>每月 7 號 (月結)</option>
-              <option value="每月 15 號 (月結)" ${acc.payday === '每月 15 號 (月結)' ? 'selected' : ''}>每月 15 號 (月結)</option>
+          <!-- 步兵姓名 -->
+          <div class="form-group">
+            <label for="staff-name">步兵姓名</label>
+            <select id="staff-name" class="form-control" required>
+              <option value="">-- 請選擇步兵同事 --</option>
+              <option value="1">陳大文 (步兵 01)</option>
+              <option value="2">李小龍 (步兵 02)</option>
+              <option value="3">張三豐 (步兵 03)</option>
             </select>
-          </td>
-
-          <td class="py-3 px-4 text-right whitespace-nowrap">
-            ${(acc.paidToday || 0) > 0 ? `
-              <span class="text-[11px] text-indigo-600 font-bold flex items-center justify-end gap-1">
-                <i data-lucide="check-check" class="w-3.5 h-3.5"></i> 已過數
-              </span>
-            ` : `
-              <button onclick="payFullWage(${idx}, ${netWage})" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition shadow-sm">
-                全額出糧
-              </button>
-            `}
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-
-      document.getElementById('adm-stat-tickets').innerText = totalTickets + ' 票';
-      document.getElementById('adm-stat-signed').innerText = totalSigned + ' 件';
-      document.getElementById('adm-stat-refunded').innerText = totalRefunded + ' 件';
-      document.getElementById('adm-stat-pending-pickup').innerText = totalPendingPickup + ' 件殘留';
-      document.getElementById('adm-stat-pending-pickup-riders').innerText = pendingPickupRidersCount;
-      document.getElementById('adm-stat-net').innerText = '$' + totalNetWage.toLocaleString();
-      document.getElementById('adm-stat-paid-today').innerText = '$' + totalPaidToday.toLocaleString();
-      document.getElementById('adm-stat-debt').innerText = '$' + totalDebt.toLocaleString();
-      document.getElementById('adm-stat-debt-count').innerText = inDebtCount;
-
-      lucide.createIcons();
-    }
-
-    function payFullWage(idx, wage) {
-      accounts[idx].paidToday = wage > 0 ? wage : 0;
-      accounts[idx].payoutStatus = '已轉帳出糧';
-      saveData();
-      renderAdminView();
-    }
-
-    // 隊長專屬工作台 (3 區件數 + 3 區票價)
-    function renderCaptainView(capId) {
-      const cap = accounts.find(a => a.id === capId);
-      document.getElementById('cap-name-display').innerText = `${cap.name} (${cap.id})`;
-      const tbody = document.getElementById('captain-table-body');
-      const mobileCards = document.getElementById('captain-mobile-cards');
-      
-      tbody.innerHTML = '';
-      mobileCards.innerHTML = '';
-
-      let teamTickets = 0;
-      accounts.filter(a => a.team === cap.team).forEach((acc) => {
-        const tCount = (acc.laguna || 0) + (acc.industrial || 0) + (acc.eastern || 0);
-        const pLag = Number(acc.priceLaguna) || 4;
-        const pInd = Number(acc.priceIndustrial) || 5;
-        const pEas = Number(acc.priceEastern) || 4;
-
-        const gross = ((acc.laguna || 0) * pLag) + ((acc.industrial || 0) * pInd) + ((acc.eastern || 0) * pEas);
-        const net = gross - (acc.penalty || 0) - (acc.comp || 0) - (acc.deduct || 0);
-
-        const globalIdx = accounts.findIndex(x => x.id === acc.id);
-
-        const mCard = document.createElement('div');
-        mCard.className = `bg-white rounded-2xl border ${acc.pendingPickup > 0 ? 'border-amber-400 bg-amber-50/20' : 'border-slate-200/90'} p-4 shadow-sm space-y-3`;
-        mCard.innerHTML = `
-          <div class="flex justify-between items-center border-b border-slate-100 pb-2">
-            <div>
-              <span class="font-extrabold text-sm text-slate-900">${acc.name}</span>
-              <span class="text-xs px-2 py-0.5 rounded font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200">${acc.id}</span>
-              <span class="text-[10px] text-slate-400 font-mono">(${acc.role})</span>
-            </div>
-            <div class="text-[10px] text-slate-500 font-bold">
-              麗:$${pLag} | 工:$${pInd} | 東:$${pEas}
-            </div>
           </div>
-          <div class="grid grid-cols-3 gap-2 text-center text-xs">
-            <div class="bg-blue-50/50 p-1.5 rounded-lg border border-blue-100">
-              <div class="text-[10px] text-blue-700 font-bold">麗港城 (件)</div>
-              <input type="number" value="${acc.laguna || 0}" onchange="updateAccountField(${globalIdx}, 'laguna', this.value); renderCaptainView('${capId}');" class="w-full bg-white border border-slate-200 rounded p-1 text-center font-bold text-blue-700 mt-1">
-              <div class="mt-1 text-[10px] text-blue-800 font-bold">$<input type="number" step="0.5" value="${pLag}" onchange="updateAccountField(${globalIdx}, 'priceLaguna', this.value); renderCaptainView('${capId}');" class="w-8 bg-white border border-blue-200 rounded text-center">/件</div>
-            </div>
-            <div class="bg-indigo-50/50 p-1.5 rounded-lg border border-indigo-100">
-              <div class="text-[10px] text-indigo-700 font-bold">工商區 (件)</div>
-              <input type="number" value="${acc.industrial || 0}" onchange="updateAccountField(${globalIdx}, 'industrial', this.value); renderCaptainView('${capId}');" class="w-full bg-white border border-slate-200 rounded p-1 text-center font-bold text-indigo-700 mt-1">
-              <div class="mt-1 text-[10px] text-indigo-800 font-bold">$<input type="number" step="0.5" value="${pInd}" onchange="updateAccountField(${globalIdx}, 'priceIndustrial', this.value); renderCaptainView('${capId}');" class="w-8 bg-white border border-indigo-200 rounded text-center">/件</div>
-            </div>
-            <div class="bg-violet-50/50 p-1.5 rounded-lg border border-violet-100">
-              <div class="text-[10px] text-violet-700 font-bold">東區 (件)</div>
-              <input type="number" value="${acc.eastern || 0}" onchange="updateAccountField(${globalIdx}, 'eastern', this.value); renderCaptainView('${capId}');" class="w-full bg-white border border-slate-200 rounded p-1 text-center font-bold text-violet-700 mt-1">
-              <div class="mt-1 text-[10px] text-violet-800 font-bold">$<input type="number" step="0.5" value="${pEas}" onchange="updateAccountField(${globalIdx}, 'priceEastern', this.value); renderCaptainView('${capId}');" class="w-8 bg-white border border-violet-200 rounded text-center">/件</div>
-            </div>
+
+          <!-- 上班時間 -->
+          <div class="form-group">
+            <label for="duty-time">上班時間</label>
+            <input type="time" id="duty-time" class="form-control" required value="08:00">
           </div>
-          <div class="grid grid-cols-3 gap-1.5 text-center text-xs">
-            <div>
-              <span class="text-[10px] text-emerald-700 font-bold">已簽收</span>
-              <input type="number" value="${acc.signed || 0}" onchange="updateAccountField(${globalIdx}, 'signed', this.value);" class="w-full bg-slate-50 border border-slate-200 rounded p-1 text-center font-bold text-emerald-600 mt-1">
-            </div>
-            <div>
-              <span class="text-[10px] text-rose-700 font-bold">已退款</span>
-              <input type="number" value="${acc.refunded || 0}" onchange="updateAccountField(${globalIdx}, 'refunded', this.value);" class="w-full bg-slate-50 border border-rose-200 rounded p-1 text-center font-bold text-rose-600 mt-1">
-            </div>
-            <div>
-              <span class="text-[10px] text-amber-800 font-bold">圍欄待攬收</span>
-              <input type="number" value="${acc.pendingPickup || 0}" onchange="updateAccountField(${globalIdx}, 'pendingPickup', this.value);" class="w-full bg-amber-50 border border-amber-300 rounded p-1 text-center font-bold text-amber-700 mt-1">
-            </div>
+
+          <!-- 備註 (跨滿整行) -->
+          <div class="form-group form-full">
+            <label for="notes">備註</label>
+            <textarea id="notes" class="form-control" placeholder="輸入特別指示、負責特定區域或物資交接備註..."></textarea>
           </div>
-          <div class="pt-2 border-t border-slate-100 flex justify-between items-center text-xs">
-            <div>總票量: <b class="text-slate-900">${tCount} 票</b></div>
-            <div class="font-bold text-emerald-600">預估工資: $${net}</div>
+
+          <!-- 提交按鈕 -->
+          <div class="form-full" style="margin-top: 8px;">
+            <button type="submit" class="btn btn-green">確認儲存排班</button>
           </div>
-        `;
-        mobileCards.appendChild(mCard);
 
-        const tr = document.createElement('tr');
-        tr.className = `hover:bg-slate-50 transition ${acc.pendingPickup > 0 ? 'bg-amber-50/20' : ''}`;
-        tr.innerHTML = `
-          <td class="py-3 px-4 font-bold text-slate-900 whitespace-nowrap sticky left-0 bg-white shadow-sm z-10">
-            ${acc.name} <span class="text-xs px-2 py-0.5 rounded font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200">${acc.id}</span>
-            <span class="text-[10px] text-slate-400 font-normal">(${acc.role})</span>
-          </td>
-          <td class="py-3 px-2 text-center">
-            <div class="flex items-center justify-center gap-1">
-              <input type="number" value="${acc.laguna || 0}" onchange="updateAccountField(${globalIdx}, 'laguna', this.value); renderCaptainView('${capId}');" class="w-10 bg-slate-50 border border-slate-200 rounded p-1 text-center font-bold text-blue-700">
-              <button onclick="openTrackingModal(${globalIdx})" class="p-1 text-blue-600 hover:bg-blue-50 rounded"><i data-lucide="file-text" class="w-3.5 h-3.5"></i></button>
-            </div>
-          </td>
-          <td class="py-3 px-2 text-center bg-blue-50/40">
-            <input type="number" step="0.5" value="${pLag}" onchange="updateAccountField(${globalIdx}, 'priceLaguna', this.value); renderCaptainView('${capId}');" class="w-11 bg-white border border-blue-300 rounded p-1 text-center font-bold text-blue-700">
-          </td>
-          <td class="py-3 px-2 text-center">
-            <div class="flex items-center justify-center gap-1">
-              <input type="number" value="${acc.industrial || 0}" onchange="updateAccountField(${globalIdx}, 'industrial', this.value); renderCaptainView('${capId}');" class="w-10 bg-slate-50 border border-slate-200 rounded p-1 text-center font-bold text-indigo-700">
-              <button onclick="openTrackingModal(${globalIdx})" class="p-1 text-indigo-600 hover:bg-indigo-50 rounded"><i data-lucide="file-text" class="w-3.5 h-3.5"></i></button>
-            </div>
-          </td>
-          <td class="py-3 px-2 text-center bg-indigo-50/40">
-            <input type="number" step="0.5" value="${pInd}" onchange="updateAccountField(${globalIdx}, 'priceIndustrial', this.value); renderCaptainView('${capId}');" class="w-11 bg-white border border-indigo-300 rounded p-1 text-center font-bold text-indigo-700">
-          </td>
-          <td class="py-3 px-2 text-center">
-            <div class="flex items-center justify-center gap-1">
-              <input type="number" value="${acc.eastern || 0}" onchange="updateAccountField(${globalIdx}, 'eastern', this.value); renderCaptainView('${capId}');" class="w-10 bg-slate-50 border border-slate-200 rounded p-1 text-center font-bold text-violet-700">
-              <button onclick="openTrackingModal(${globalIdx})" class="p-1 text-violet-600 hover:bg-violet-50 rounded"><i data-lucide="file-text" class="w-3.5 h-3.5"></i></button>
-            </div>
-          </td>
-          <td class="py-3 px-2 text-center bg-violet-50/40">
-            <input type="number" step="0.5" value="${pEas}" onchange="updateAccountField(${globalIdx}, 'priceEastern', this.value); renderCaptainView('${capId}');" class="w-11 bg-white border border-violet-300 rounded p-1 text-center font-bold text-violet-700">
-          </td>
-          <td class="py-3 px-2 text-center font-bold text-slate-900">${tCount} 票</td>
-          <td class="py-3 px-2 text-center">
-            <input type="number" value="${acc.signed || 0}" onchange="updateAccountField(${globalIdx}, 'signed', this.value);" class="w-10 bg-slate-50 border border-slate-200 rounded p-1 text-center font-bold text-emerald-600">
-          </td>
-          <td class="py-3 px-2 text-center">
-            <input type="number" value="${acc.refunded || 0}" onchange="updateAccountField(${globalIdx}, 'refunded', this.value);" class="w-10 bg-white border border-rose-200 rounded p-1 text-center font-bold text-rose-600">
-          </td>
-          <td class="py-3 px-3 text-center">
-            <input type="number" value="${acc.pendingPickup || 0}" onchange="updateAccountField(${globalIdx}, 'pendingPickup', this.value);" class="w-10 bg-white border border-amber-300 rounded p-1 text-center font-bold text-amber-700">
-          </td>
-          <td class="py-3 px-3 text-center">
-            ${acc.role === '隊長' ? `
-              <input type="number" value="${acc.commission || 0}" onchange="updateAccountField(${globalIdx}, 'commission', this.value);" class="w-14 bg-amber-50 border border-amber-300 rounded p-1 text-center font-bold text-amber-700">
-            ` : `<span class="text-slate-300">-</span>`}
-          </td>
-          <td class="py-3 px-3 text-center font-bold text-emerald-600">$${net}</td>
-        `;
-        tbody.appendChild(tr);
-      });
+        </div>
+      </form>
+    </section>
 
-      document.getElementById('cap-team-tickets').innerText = teamTickets + ' 票';
-      lucide.createIcons();
-    }
+  </div>
 
-    function renderRiderView(idx) {
-      const acc = accounts[idx];
-      const pLag = Number(acc.priceLaguna) || 4;
-      const pInd = Number(acc.priceIndustrial) || 5;
-      const pEas = Number(acc.priceEastern) || 4;
-
-      document.getElementById('rider-name-display').innerHTML = `${acc.name} <span id="rider-id-badge" class="text-xs px-2 py-0.5 ${acc.prefix === 'KM' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 'bg-blue-50 text-blue-700 border-blue-200'} rounded-md font-mono font-bold">${acc.id}</span>`;
-      document.getElementById('rider-team-display').innerText = `所屬隊伍：${acc.team}`;
-      document.getElementById('rider-payday-display').innerText = `糧期: ${acc.payday}`;
-
-      document.getElementById('rider-p-laguna').innerText = pLag;
-      document.getElementById('rider-p-industrial').innerText = pInd;
-      document.getElementById('rider-p-eastern').innerText = pEas;
-
-      document.getElementById('txt-p-laguna').innerText = pLag;
-      document.getElementById('txt-p-industrial').innerText = pInd;
-      document.getElementById('txt-p-eastern').innerText = pEas;
-
-      document.getElementById('inp-laguna').value = acc.laguna || 0;
-      document.getElementById('inp-laguna-nos').value = acc.lagunaNos || '';
-      document.getElementById('inp-industrial').value = acc.industrial || 0;
-      document.getElementById('inp-industrial-nos').value = acc.industrialNos || '';
-      document.getElementById('inp-eastern').value = acc.eastern || 0;
-      document.getElementById('inp-eastern-nos').value = acc.easternNos || '';
-
-      document.getElementById('inp-signed').value = acc.signed || 0;
-      document.getElementById('inp-refunded').value = acc.refunded || 0;
-      document.getElementById('inp-pending-pickup').value = acc.pendingPickup || 0;
-      recalcRiderTally();
-    }
-
-    function recalcRiderTally() {
-      if (!loggedInUser || loggedInUser.role !== 'rider') return;
-      const acc = accounts[loggedInUser.idx];
-
-      const pLag = Number(acc.priceLaguna) || 4;
-      const pInd = Number(acc.priceIndustrial) || 5;
-      const pEas = Number(acc.priceEastern) || 4;
-
-      const lag = Number(document.getElementById('inp-laguna').value) || 0;
-      const ind = Number(document.getElementById('inp-industrial').value) || 0;
-      const eas = Number(document.getElementById('inp-eastern').value) || 0;
-      const signed = Number(document.getElementById('inp-signed').value) || 0;
-      const refunded = Number(document.getElementById('inp-refunded').value) || 0;
-      const tot = lag + ind + eas;
-
-      const gross = (lag * pLag) + (ind * pInd) + (eas * pEas);
-
-      document.getElementById('pv-laguna').innerText = lag;
-      document.getElementById('pv-industrial').innerText = ind;
-      document.getElementById('pv-eastern').innerText = eas;
-      document.getElementById('pv-total-t').innerText = tot;
-      document.getElementById('pv-signed-txt').innerText = signed;
-      document.getElementById('pv-refund-txt').innerText = refunded;
-      document.getElementById('pv-gross-amt').innerText = gross;
-      document.getElementById('pv-net-amt').innerText = gross;
-    }
-
-    function submitRiderTally() {
-      if (!loggedInUser || loggedInUser.role !== 'rider') return;
-      const rIdx = loggedInUser.idx;
-
-      accounts[rIdx].laguna = Number(document.getElementById('inp-laguna').value) || 0;
-      accounts[rIdx].lagunaNos = document.getElementById('inp-laguna-nos').value.trim();
-      accounts[rIdx].industrial = Number(document.getElementById('inp-industrial').value) || 0;
-      accounts[rIdx].industrialNos = document.getElementById('inp-industrial-nos').value.trim();
-      accounts[rIdx].eastern = Number(document.getElementById('inp-eastern').value) || 0;
-      accounts[rIdx].easternNos = document.getElementById('inp-eastern-nos').value.trim();
-
-      accounts[rIdx].signed = Number(document.getElementById('inp-signed').value) || 0;
-      accounts[rIdx].refunded = Number(document.getElementById('inp-refunded').value) || 0;
-      accounts[rIdx].pendingPickup = Number(document.getElementById('inp-pending-pickup').value) || 0;
-
-      saveData();
-      document.getElementById('rider-form').classList.add('hidden');
-      document.getElementById('rider-success-card').classList.remove('hidden');
-    }
-
-    function resetRiderForm() {
-      document.getElementById('rider-form').classList.remove('hidden');
-      document.getElementById('rider-success-card').classList.add('hidden');
-    }
-
-    function updateAccountField(idx, field, val) {
-      accounts[idx][field] = Number(val) || 0;
-      saveData();
-      renderAdminView();
-    }
-
-    function updateAccountFieldStr(idx, field, val) {
-      accounts[idx][field] = val;
-      saveData();
-      renderAdminView();
-    }
-
-    function openTrackingModal(idx) {
-      editingTrackIdx = idx;
-      const acc = accounts[idx];
-      document.getElementById('modal-track-title').innerHTML = `<i data-lucide="package" class="w-5 h-5 text-blue-600"></i> ${acc.name} (${acc.id}) 快件單號`;
-      document.getElementById('modal-inp-laguna-nos').value = acc.lagunaNos || '';
-      document.getElementById('modal-inp-industrial-nos').value = acc.industrialNos || '';
-      document.getElementById('modal-inp-eastern-nos').value = acc.easternNos || '';
-      document.getElementById('modal-tracking-numbers').classList.remove('hidden');
-      lucide.createIcons();
-    }
-
-    function closeTrackingModal() {
-      document.getElementById('modal-tracking-numbers').classList.add('hidden');
-    }
-
-    function saveTrackingModal() {
-      if (editingTrackIdx >= 0) {
-        accounts[editingTrackIdx].lagunaNos = document.getElementById('modal-inp-laguna-nos').value.trim();
-        accounts[editingTrackIdx].industrialNos = document.getElementById('modal-inp-industrial-nos').value.trim();
-        accounts[editingTrackIdx].easternNos = document.getElementById('modal-inp-eastern-nos').value.trim();
-        saveData();
-        renderAdminView();
-      }
-      closeTrackingModal();
-    }
-
-    function openAddRiderModal() {
-      document.getElementById('modal-add-rider').classList.remove('hidden');
-    }
-    function closeAddRiderModal() {
-      document.getElementById('modal-add-rider').classList.add('hidden');
-    }
-
-    // 依選定隊伍自動帶入預設票價
-    function autoFillTeamPrice(team) {
-      if (team === '俊華隊') {
-        document.getElementById('new-price-laguna').value = 4;
-        document.getElementById('new-price-industrial').value = 4.5;
-        document.getElementById('new-price-eastern').value = 4;
-      } else {
-        document.getElementById('new-price-laguna').value = 4;
-        document.getElementById('new-price-industrial').value = 5;
-        document.getElementById('new-price-eastern').value = 4;
-      }
-    }
-
-    function saveNewRider() {
-      const name = document.getElementById('new-rider-name').value.trim();
-      const team = document.getElementById('new-rider-team').value;
-      const pLag = Number(document.getElementById('new-price-laguna').value) || 4;
-      const pInd = Number(document.getElementById('new-price-industrial').value) || 5;
-      const pEas = Number(document.getElementById('new-price-eastern').value) || 4;
-      const payday = document.getElementById('new-rider-payday').value;
-
-      if (!name) { alert('請輸入普通步兵姓名！'); return; }
-
-      let prefix = 'KM';
-      let role = '自營步兵';
-
-      if (team === '景鴻隊') { prefix = 'A'; role = '普通步兵'; }
-      if (team === '詠豪隊') { prefix = 'B'; role = '普通步兵'; }
-      if (team === '俊華隊') { prefix = 'C'; role = '普通步兵'; }
-
-      const teamMembers = accounts.filter(a => a.team === team);
-      let nextSeq = 1;
-      
-      if (prefix === 'KM') {
-        nextSeq = teamMembers.length + 1;
-      } else {
-        nextSeq = teamMembers.length + 1;
-      }
-
-      const newId = prefix + String(nextSeq).padStart(3, '0');
-
-      accounts.push({
-        id: newId,
-        name: name,
-        role: role,
-        team: team,
-        prefix: prefix,
-        laguna: 0, lagunaNos: '', priceLaguna: pLag,
-        industrial: 0, industrialNos: '', priceIndustrial: pInd,
-        eastern: 0, easternNos: '', priceEastern: pEas,
-        signed: 0,
-        refunded: 0,
-        pendingPickup: 0,
-        payday: payday,
-        commission: 0,
-        penalty: 0,
-        comp: 0,
-        deduct: 0,
-        advance: 0,
-        paidToday: 0,
-        payoutStatus: '待轉帳'
-      });
-
-      saveData();
-      alert(`✅ 成功建立步兵「${name}」！\n歸屬隊伍：${team}\n登入帳號：【${newId}】\n預設密碼：【8888】\n分區票價：麗港城 $${pLag} / 工商 $${pInd} / 東區 $${pEas}\n糧期：${payday}`);
-      closeAddRiderModal();
-      document.getElementById('new-rider-name').value = '';
-      renderAdminView();
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-      saveData();
-      lucide.createIcons();
-    });
-  </script>
 </body>
 </html>
