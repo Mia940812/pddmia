@@ -34,7 +34,7 @@
           Mia組
         </div>
         <h2 class="text-lg font-extrabold text-slate-900">派件報數與薪酬結算系統</h2>
-        <p class="text-xs text-slate-500">請輸入帳號密碼，或使用下方快捷登入</p>
+        <p class="text-xs text-slate-500">請輸入帳號密碼，或點擊下方快捷通道</p>
       </div>
 
       <div class="space-y-3.5 text-xs">
@@ -56,11 +56,10 @@
           <i data-lucide="log-in" class="w-4 h-4"></i> 安全登入系統
         </button>
 
-        <!-- 總管理員快捷直達通道 -->
         <div class="pt-2 border-t border-slate-100 space-y-2">
-          <div class="text-[11px] text-slate-400 text-center font-semibold">快速登入通道</div>
-          <button onclick="quickAdminLogin()" class="w-full py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-xl text-xs font-bold transition shadow-md shadow-amber-500/20 active:scale-98 flex items-center justify-center gap-1.5">
-            👑 一鍵以【總管理員 Mia】登入
+          <div class="text-[11px] text-slate-400 text-center font-semibold">快速通道</div>
+          <button onclick="quickAdminLogin()" class="w-full py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold transition shadow-md shadow-blue-500/20 active:scale-98 flex items-center justify-center gap-1.5">
+            👑 一鍵進入【總管理員 Mia 大表】
           </button>
         </div>
       </div>
@@ -82,7 +81,7 @@
           <div>
             <div class="flex items-center gap-2">
               <h1 class="font-extrabold text-base text-slate-900 leading-tight">派件報數結算系統</h1>
-              <span id="header-role-badge" class="text-xs px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-bold leading-none">身份</span>
+              <span id="header-role-badge" class="text-xs px-2.5 py-0.5 rounded-full font-bold leading-none">身份</span>
             </div>
             <p id="header-user-info" class="text-xs text-slate-500">登入中</p>
           </div>
@@ -94,11 +93,6 @@
             <i data-lucide="layout-dashboard" class="w-3.5 h-3.5"></i> 主工作台
           </button>
           
-          <!-- 管理員專屬：切換至自營報數模式 -->
-          <button id="nav-btn-admin-rider-toggle" onclick="toggleAdminRiderView()" class="px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold transition flex items-center gap-1 border border-indigo-200 hidden">
-            <i data-lucide="user-check" class="w-3.5 h-3.5"></i> 🏃 切換報數模式
-          </button>
-
           <button id="nav-btn-history" onclick="switchNavTab('history')" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1 border border-slate-200">
             <i data-lucide="calendar" class="w-3.5 h-3.5 text-blue-600"></i> 6- 紀錄 (過往報數)
           </button>
@@ -260,15 +254,11 @@
           </div>
         </div>
 
-        <!-- 4大圍欄票價標籤 -->
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-center text-xs" id="rider-fence-badges"></div>
 
         <div id="rider-form" class="space-y-3.5">
-          
-          <!-- 4大圍欄件數輸入 -->
           <div class="space-y-2" id="rider-fence-inputs"></div>
 
-          <!-- 已簽收件 ＋ 簽收單號 -->
           <div class="p-3 bg-emerald-50/60 rounded-2xl border border-emerald-200 space-y-2">
             <div class="flex justify-between items-center">
               <label class="text-xs font-bold text-emerald-800 flex items-center gap-1">
@@ -277,11 +267,10 @@
               <input id="inp-signed" type="number" value="0" oninput="recalcRiderTally()" class="w-20 bg-white border border-emerald-300 rounded-lg p-1.5 text-center font-bold text-emerald-700 text-sm">
             </div>
             <div>
-              <textarea id="inp-signed-nos" rows="2" placeholder="請輸入/貼上【已簽收件】快件單號（以空格或換行隔開）..." class="w-full bg-white border border-emerald-200 rounded-xl p-2 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-emerald-500"></textarea>
+              <textarea id="inp-signed-nos" rows="2" placeholder="請輸入/貼上【已簽收件】快件單號..." class="w-full bg-white border border-emerald-200 rounded-xl p-2 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-emerald-500"></textarea>
             </div>
           </div>
 
-          <!-- 已退款件 ＋ 退款單號 -->
           <div class="p-3 bg-rose-50/60 rounded-2xl border border-rose-200 space-y-2">
             <div class="flex justify-between items-center">
               <label class="text-xs font-bold text-rose-700 flex items-center gap-1">
@@ -294,7 +283,6 @@
             </div>
           </div>
 
-          <!-- 圍欄清場仍有待攬收 ＋ 單號 -->
           <div class="p-3 bg-amber-50/60 rounded-2xl border border-amber-200/80 space-y-2">
             <div class="flex justify-between items-center">
               <label class="text-xs font-bold text-amber-900 block flex items-center gap-1">
@@ -307,7 +295,6 @@
             </div>
           </div>
 
-          <!-- 預支借支 / 扣糧 -->
           <div class="grid grid-cols-2 gap-2 bg-slate-50 p-3 rounded-2xl border border-slate-200">
             <div>
               <label class="text-xs font-bold text-orange-700 block mb-1">預支借支 ($)</label>
@@ -319,7 +306,6 @@
             </div>
           </div>
 
-          <!-- 即時工資試算看板 -->
           <div class="p-4 rounded-2xl bg-slate-900 text-white space-y-2 text-xs shadow-md">
             <div class="flex justify-between text-slate-300">
               <span>總派票量: <b id="pv-total-t" class="text-white text-sm">0</b> 票</span>
@@ -348,15 +334,14 @@
 
         <div id="rider-success-card" class="p-5 rounded-2xl bg-emerald-50 border border-emerald-200 text-center space-y-2 hidden">
           <i data-lucide="check-circle-2" class="w-10 h-10 text-emerald-600 mx-auto"></i>
-          <h4 class="font-bold text-sm text-emerald-900">今日報數與單號已成功提交並存入歷史紀錄！</h4>
-          <p class="text-xs text-slate-500">總管理員核對簽收單號、待攬收單號與預支後，將依指定糧期發放。</p>
+          <h4 class="font-bold text-sm text-emerald-900">今日報數與單號已成功提交！</h4>
           <button onclick="resetRiderForm()" class="mt-2 px-3.5 py-2 bg-blue-600 text-white text-xs font-bold rounded-xl shadow-md">修改今日報數</button>
         </div>
 
       </div>
     </main>
 
-    <!-- ==================== 4. 頁頂入口 6 - 過往報數紀錄 (History) ==================== -->
+    <!-- ==================== 4. 頁頂入口 6 - 過往報數紀錄 ==================== -->
     <main id="view-history" class="flex-1 p-4 space-y-4 max-w-7xl w-full mx-auto hidden tab-content">
       <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
         <div class="flex flex-wrap justify-between items-center gap-3 border-b border-slate-100 pb-3">
@@ -395,24 +380,23 @@
       </div>
     </main>
 
-    <!-- ==================== 5. 頁頂入口 7 - 數據統計 (Stats) ==================== -->
+    <!-- ==================== 5. 頁頂入口 7 - 數據統計 ==================== -->
     <main id="view-stats" class="flex-1 p-4 space-y-4 max-w-7xl w-full mx-auto hidden tab-content">
       <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-5">
-        
         <div>
           <h2 class="text-base font-extrabold text-slate-900 flex items-center gap-2">
             <i data-lucide="bar-chart-3" class="w-5 h-5 text-emerald-600"></i> 7- 數據 - 區間統計與總量分析
           </h2>
-          <p class="text-xs text-slate-500">可自選日期區間（幾多號到幾多號）、指定特定步兵或特定圍欄區域進行總數量與金額結算</p>
+          <p class="text-xs text-slate-500">可自選日期區間、指定特定步兵或特定圍欄區域進行總量分析</p>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-200/80 text-xs">
           <div>
-            <label class="font-bold text-slate-700 block mb-1">開始日期 (幾多號)</label>
+            <label class="font-bold text-slate-700 block mb-1">開始日期</label>
             <input id="stat-start-date" type="date" class="w-full bg-white border border-slate-200 rounded-xl p-2 font-bold text-slate-800">
           </div>
           <div>
-            <label class="font-bold text-slate-700 block mb-1">結束日期 (到幾多號)</label>
+            <label class="font-bold text-slate-700 block mb-1">結束日期</label>
             <input id="stat-end-date" type="date" class="w-full bg-white border border-slate-200 rounded-xl p-2 font-bold text-slate-800">
           </div>
           <div>
@@ -481,7 +465,6 @@
             </table>
           </div>
         </div>
-
       </div>
     </main>
 
@@ -575,7 +558,7 @@
         </div>
 
         <div>
-          <label class="font-bold text-slate-700 block mb-1">歸屬隊伍 (系統自動派發專屬 ID)</label>
+          <label class="font-bold text-slate-700 block mb-1">歸屬隊伍</label>
           <select id="new-rider-team" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-bold focus:ring-2 focus:ring-blue-500">
             <option value="Mia自營隊">⭐ Mia 自營隊 (自動派發 KM001+)</option>
             <option value="景鴻隊">A 隊 (景鴻隊 - 自動派發 A002+)</option>
@@ -682,35 +665,33 @@
         payday: '隔日結算', commission: 0, penalty: 0, comp: 0, deduct: 0, advance: 0, paidToday: 0, payoutStatus: '待轉帳' }
     ];
 
-    // 全新儲存鍵值：MIA_FINAL_V8
-    let fences = JSON.parse(localStorage.getItem('MIA_FINAL_V8_FENCES')) || defaultFences;
-    let accounts = JSON.parse(localStorage.getItem('MIA_FINAL_V8_ACCOUNTS')) || initialBase;
-    let historyRecords = JSON.parse(localStorage.getItem('MIA_FINAL_V8_HIST')) || [];
+    let fences = JSON.parse(localStorage.getItem('MIA_FENCES_FIX_V9')) || defaultFences;
+    let accounts = JSON.parse(localStorage.getItem('MIA_ACCOUNTS_FIX_V9')) || initialBase;
+    let historyRecords = JSON.parse(localStorage.getItem('MIA_HIST_FIX_V9')) || [];
     
-    // 強制校正 ADMIN 帳號永遠存在且為管理員
-    let adminIdx = accounts.findIndex(a => a.id === 'ADMIN');
+    // 強制重設 ADMIN 為管理員角色
+    let adminIdx = accounts.findIndex(a => a.id.toUpperCase() === 'ADMIN');
     if (adminIdx === -1) {
-      accounts.unshift(initialBase[0]);
+      accounts.unshift({ ...initialBase[0] });
     } else {
       accounts[adminIdx].role = '管理員';
+      accounts[adminIdx].name = '總管理員 Mia';
       accounts[adminIdx].password = accounts[adminIdx].password || 'mia888';
     }
 
     let loggedInUser = null;
-    let adminSimulatingRider = false;
     let editingTrackIdx = -1;
     let pwdTargetIdx = -1;
 
     function saveData() {
-      localStorage.setItem('MIA_FINAL_V8_FENCES', JSON.stringify(fences));
-      localStorage.setItem('MIA_FINAL_V8_ACCOUNTS', JSON.stringify(accounts));
-      localStorage.setItem('MIA_FINAL_V8_HIST', JSON.stringify(historyRecords));
+      localStorage.setItem('MIA_FENCES_FIX_V9', JSON.stringify(fences));
+      localStorage.setItem('MIA_ACCOUNTS_FIX_V9', JSON.stringify(accounts));
+      localStorage.setItem('MIA_HIST_FIX_V9', JSON.stringify(historyRecords));
     }
 
-    // 總管理員一鍵快捷登入
     function quickAdminLogin() {
       document.getElementById('login-username').value = 'ADMIN';
-      document.getElementById('login-password').value = accounts.find(a => a.id === 'ADMIN')?.password || 'mia888';
+      document.getElementById('login-password').value = accounts.find(a => a.id.toUpperCase() === 'ADMIN')?.password || 'mia888';
       handleLogin();
     }
 
@@ -724,8 +705,10 @@
 
       if (userIdx !== -1) {
         const user = accounts[userIdx];
-        if (user.id === 'ADMIN' || user.role === '管理員') {
-          loggedInUser = { role: 'admin', idx: userIdx, ...user };
+        
+        // 強制 ADMIN 判定為最高管理員
+        if (user.id.toUpperCase() === 'ADMIN') {
+          loggedInUser = { role: 'admin', idx: userIdx, ...user, role: '管理員' };
         } else if (user.role === '隊長') {
           loggedInUser = { role: 'captain', idx: userIdx, ...user };
         } else {
@@ -745,53 +728,30 @@
       const badge = document.getElementById('header-role-badge');
       const info = document.getElementById('header-user-info');
       const btnClearHist = document.getElementById('btn-clear-history');
-      const btnAdminToggle = document.getElementById('nav-btn-admin-rider-toggle');
 
       if (loggedInUser.role === 'admin') {
         badge.innerText = '👑 總管理員';
-        badge.className = 'text-xs px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-bold';
+        badge.className = 'text-xs px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-bold leading-none';
         info.innerText = 'Mia (最高權限：可查看密碼、新增/刪除圍欄分工、結算發薪)';
         btnClearHist.classList.remove('hidden');
-        btnAdminToggle.classList.remove('hidden');
       } else if (loggedInUser.role === 'captain') {
         badge.innerText = '🎖️ 隊長';
-        badge.className = 'text-xs px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 font-bold';
+        badge.className = 'text-xs px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 font-bold leading-none';
         info.innerText = `${loggedInUser.name} (${loggedInUser.id})`;
         btnClearHist.classList.add('hidden');
-        btnAdminToggle.classList.add('hidden');
       } else {
         badge.innerText = '🏃 普通步兵';
-        badge.className = 'text-xs px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold';
+        badge.className = 'text-xs px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold leading-none';
         info.innerText = `${loggedInUser.name} (${loggedInUser.id} • ${loggedInUser.team})`;
         btnClearHist.classList.add('hidden');
-        btnAdminToggle.classList.add('hidden');
       }
 
       switchNavTab('main');
       lucide.createIcons();
     }
 
-    function toggleAdminRiderView() {
-      if (loggedInUser.role !== 'admin') return;
-      adminSimulatingRider = !adminSimulatingRider;
-      const btn = document.getElementById('nav-btn-admin-rider-toggle');
-      if (adminSimulatingRider) {
-        btn.innerHTML = `<i data-lucide="shield" class="w-3.5 h-3.5"></i> 👑 返回管理員大表`;
-        document.getElementById('view-admin').classList.add('hidden');
-        document.getElementById('view-rider').classList.remove('hidden');
-        renderRiderView(loggedInUser.idx);
-      } else {
-        btn.innerHTML = `<i data-lucide="user-check" class="w-3.5 h-3.5"></i> 🏃 切換報數模式`;
-        document.getElementById('view-rider').classList.add('hidden');
-        document.getElementById('view-admin').classList.remove('hidden');
-        renderAdminView();
-      }
-      lucide.createIcons();
-    }
-
     function handleLogout() {
       loggedInUser = null;
-      adminSimulatingRider = false;
       document.getElementById('login-username').value = '';
       document.getElementById('login-password').value = '';
       document.getElementById('login-error-msg').classList.add('hidden');
@@ -809,13 +769,8 @@
       if (tab === 'main') {
         document.getElementById('nav-btn-main').className = 'px-3 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-bold transition flex items-center gap-1';
         if (loggedInUser.role === 'admin') {
-          if (adminSimulatingRider) {
-            document.getElementById('view-rider').classList.remove('hidden');
-            renderRiderView(loggedInUser.idx);
-          } else {
-            document.getElementById('view-admin').classList.remove('hidden');
-            renderAdminView();
-          }
+          document.getElementById('view-admin').classList.remove('hidden');
+          renderAdminView();
         } else if (loggedInUser.role === 'captain') {
           document.getElementById('view-captain').classList.remove('hidden');
           renderCaptainView(loggedInUser.id);
@@ -1599,7 +1554,7 @@
       saveData();
       alert(`✅ 帳號【${accounts[pwdTargetIdx].id}】密碼已更新為：${newPwd}`);
       closeChangePasswordModal();
-      if (loggedInUser && loggedInUser.role === 'admin' && !adminSimulatingRider) renderAdminView();
+      if (loggedInUser && loggedInUser.role === 'admin') renderAdminView();
     }
 
     // ==================== 9. 單號查看與編輯 ====================
@@ -1625,7 +1580,7 @@
         accounts[editingTrackIdx].refundedNos = document.getElementById('modal-inp-refunded-nos').value.trim();
         accounts[editingTrackIdx].pendingPickupNos = document.getElementById('modal-inp-pending-pickup-nos').value.trim();
         saveData();
-        if (loggedInUser.role === 'admin' && !adminSimulatingRider) renderAdminView();
+        if (loggedInUser.role === 'admin') renderAdminView();
       }
       closeTrackingModal();
     }
