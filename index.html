@@ -2,7 +2,7 @@
 <html lang="zh-HK">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.5, maximum-scale=3.0, user-scalable=yes">
   <title>Mia組 - 派貨員獨立報數與對數結算系統</title>
   <!-- Tailwind CSS & Lucide Icons -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -17,9 +17,24 @@
     }
     input[type=number]::-webkit-inner-spin-button, 
     input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    /* 自訂流暢橫向滾動條 */
+    .table-scroll-container::-webkit-scrollbar {
+      height: 8px;
+    }
+    .table-scroll-container::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 4px;
+    }
+    .table-scroll-container::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    .table-scroll-container::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
   </style>
 </head>
-<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col antialiased overflow-x-hidden">
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col antialiased">
 
   <!-- ==================== 0. 登入門禁畫面 ==================== -->
   <div id="view-login" class="flex-1 flex items-center justify-center p-4 min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950">
@@ -56,28 +71,28 @@
     </div>
   </div>
 
-  <!-- ==================== 系統主體區域 (登入後解鎖) ==================== -->
-  <div id="app-container" class="hidden flex-1 flex flex-col min-h-screen">
+  <!-- ==================== 系統主體區域 ==================== -->
+  <div id="app-container" class="hidden flex-1 flex flex-col min-h-screen w-full">
     
     <!-- 頂部全域導航列 -->
-    <header class="bg-white border-b border-slate-200 px-3 sm:px-6 py-2.5 sticky top-0 z-50 shadow-sm">
-      <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2.5">
+    <header class="bg-white border-b border-slate-200 px-4 py-3 sticky top-0 z-50 shadow-sm w-full">
+      <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
         
-        <div class="flex items-center gap-2.5 cursor-pointer" onclick="switchNavTab('main')">
-          <div class="h-9 px-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20 font-black text-sm tracking-wider flex-shrink-0">
+        <div class="flex items-center gap-3 cursor-pointer" onclick="switchNavTab('main')">
+          <div class="h-10 px-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20 font-black text-sm tracking-wider flex-shrink-0">
             Mia組
           </div>
           <div>
-            <div class="flex items-center gap-1.5">
-              <h1 class="font-extrabold text-sm sm:text-base text-slate-900 leading-tight">派件報數結算系統</h1>
-              <span id="header-role-badge" class="text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-bold leading-none">身份</span>
+            <div class="flex items-center gap-2">
+              <h1 class="font-extrabold text-base text-slate-900 leading-tight">派件報數結算系統</h1>
+              <span id="header-role-badge" class="text-[11px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-bold leading-none">身份</span>
             </div>
-            <p id="header-user-info" class="text-[11px] text-slate-500 hidden sm:block">登入中</p>
+            <p id="header-user-info" class="text-xs text-slate-500">登入中</p>
           </div>
         </div>
 
-        <!-- 頁頂導航按鈕列 (含 入口6-紀錄 與 入口7-數據) -->
-        <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+        <!-- 頂部功能入口 -->
+        <div class="flex items-center gap-2 flex-wrap">
           <button id="nav-btn-main" onclick="switchNavTab('main')" class="px-3 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-bold transition flex items-center gap-1">
             <i data-lucide="layout-dashboard" class="w-3.5 h-3.5"></i> 主工作台
           </button>
@@ -98,57 +113,57 @@
       </div>
     </header>
 
-    <!-- ==================== 1. 總管理員工作台 ==================== -->
-    <main id="view-admin" class="flex-1 p-3 sm:p-6 space-y-4 sm:space-y-6 max-w-7xl w-full mx-auto hidden tab-content">
+    <!-- ==================== 1. 總管理員工作台 (手機/電腦同比例大表) ==================== -->
+    <main id="view-admin" class="flex-1 p-4 space-y-4 max-w-7xl w-full mx-auto hidden tab-content">
       
-      <!-- 頂部統計指標卡片 -->
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
-        <div class="p-3.5 sm:p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between">
+      <!-- 頂部統計指標看板 -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div class="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between">
           <div>
-            <div class="text-[11px] sm:text-xs font-semibold text-slate-500">今日全隊總票量</div>
-            <div id="adm-stat-tickets" class="text-xl sm:text-2xl font-black text-slate-900 mt-1">0 票</div>
+            <div class="text-xs font-semibold text-slate-500">今日全隊總票量</div>
+            <div id="adm-stat-tickets" class="text-2xl font-black text-slate-900 mt-1">0 票</div>
           </div>
-          <div class="text-[11px] sm:text-xs text-blue-600 font-semibold mt-2 flex items-center justify-between">
+          <div class="text-xs text-blue-600 font-semibold mt-2 flex items-center justify-between">
             <span>簽收: <b id="adm-stat-signed">0</b></span>
             <span class="text-rose-600 font-bold">退款: <b id="adm-stat-refunded">0</b></span>
           </div>
         </div>
 
-        <div class="p-3.5 sm:p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between">
+        <div class="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between">
           <div>
-            <div class="text-[11px] sm:text-xs font-semibold text-slate-500">圍欄清場待攬收殘留</div>
-            <div id="adm-stat-pending-pickup" class="text-xl sm:text-2xl font-black text-slate-700 mt-1">0 件殘留</div>
+            <div class="text-xs font-semibold text-slate-500">圍欄清場待攬收殘留</div>
+            <div id="adm-stat-pending-pickup" class="text-2xl font-black text-slate-700 mt-1">0 件殘留</div>
           </div>
-          <div class="text-[10px] sm:text-xs text-slate-500 font-medium mt-2 flex items-center gap-1">
+          <div class="text-xs text-slate-500 font-medium mt-2 flex items-center gap-1">
             <i data-lucide="alert-circle" class="w-3.5 h-3.5 text-amber-500 flex-shrink-0"></i> <span id="adm-stat-pending-pickup-riders">0</span> 人待攬收異常
           </div>
         </div>
 
-        <div class="p-3.5 sm:p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between">
+        <div class="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between">
           <div>
-            <div class="text-[11px] sm:text-xs font-semibold text-slate-500">今日應發總工資</div>
-            <div id="adm-stat-net" class="text-xl sm:text-2xl font-black text-emerald-600 mt-1">$0</div>
+            <div class="text-xs font-semibold text-slate-500">今日應發總工資</div>
+            <div id="adm-stat-net" class="text-2xl font-black text-emerald-600 mt-1">$0</div>
           </div>
-          <div class="text-[10px] sm:text-xs text-emerald-600 font-medium mt-2">已扣除工單、扣糧與借支</div>
+          <div class="text-xs text-emerald-600 font-medium mt-2">已扣除工單、扣糧與借支</div>
         </div>
 
-        <div class="p-3.5 sm:p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between">
+        <div class="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between">
           <div>
-            <div class="text-[11px] sm:text-xs font-semibold text-slate-500">今日實出 / 剩餘結欠</div>
+            <div class="text-xs font-semibold text-slate-500">今日實出 / 剩餘結欠</div>
             <div class="text-sm font-black mt-1 space-y-0.5">
               <div class="text-indigo-600">實出工資: <span id="adm-stat-paid-today">$0</span></div>
               <div class="text-rose-600">剩餘結欠: <span id="adm-stat-debt">$0</span></div>
             </div>
           </div>
-          <div class="text-[10px] text-slate-400 mt-1">依約定糧期發放</div>
+          <div class="text-[11px] text-slate-400 mt-1">依約定糧期發放</div>
         </div>
       </div>
 
       <!-- 管理員操作列 -->
-      <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 bg-white p-3 sm:p-4 rounded-2xl border border-slate-200/80 shadow-sm">
+      <div class="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm">
         <div class="flex items-center gap-2">
-          <span class="text-xs font-bold text-slate-700 whitespace-nowrap">篩選隊伍:</span>
-          <select id="adm-filter-team" onchange="renderAdminView()" class="w-full sm:w-auto bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none">
+          <span class="text-xs font-bold text-slate-700">篩選隊伍:</span>
+          <select id="adm-filter-team" onchange="renderAdminView()" class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none">
             <option value="all">全部隊伍 (全體人員)</option>
             <option value="Mia自營隊">⭐ Mia 自營隊 (KM直屬)</option>
             <option value="景鴻隊">A 隊 (A001 景鴻隊)</option>
@@ -157,7 +172,7 @@
           </select>
         </div>
 
-        <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+        <div class="flex items-center gap-2 flex-wrap">
           <button onclick="openManageFencesModal()" class="px-3 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-xs font-bold text-white shadow-sm flex items-center gap-1.5 transition active:scale-95">
             <i data-lucide="map-pin" class="w-3.5 h-3.5"></i> 圍欄與分工管理
           </button>
@@ -170,22 +185,19 @@
         </div>
       </div>
 
-      <!-- 手機端卡片流 -->
-      <div id="admin-mobile-cards" class="block md:hidden space-y-3"></div>
-
-      <!-- 電腦端寬螢幕表格 -->
-      <div class="hidden md:block bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+      <!-- 核心大表（手機與電腦同比例，橫向滑動鎖定首列） -->
+      <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
         <div class="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
           <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2">
             <span class="px-2 py-0.5 bg-blue-600 text-white rounded text-xs font-black">Mia組</span>
             全體人員薪酬結算、圍欄分工、單號與帳戶密碼全覽
           </h2>
-          <span class="text-xs text-slate-400">總管理員具最高權限：可直接查看密碼、點擊修改密碼、編輯資料或刪除人員</span>
+          <span class="text-xs text-slate-400">總管理員具最高權限：可查看密碼、點擊修改密碼、編輯資料或刪除人員</span>
         </div>
 
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto table-scroll-container">
           <table class="w-full text-left text-xs border-collapse min-w-[2400px]" id="admin-main-table">
-            <thead class="bg-slate-100/70 text-slate-600 font-semibold border-b border-slate-200 text-[11px]" id="admin-table-head"></thead>
+            <thead class="bg-slate-100/80 text-slate-600 font-semibold border-b border-slate-200 text-xs" id="admin-table-head"></thead>
             <tbody id="admin-table-body" class="divide-y divide-slate-100 text-slate-700"></tbody>
           </table>
         </div>
@@ -193,30 +205,28 @@
     </main>
 
     <!-- ==================== 2. 隊長工作台 ==================== -->
-    <main id="view-captain" class="flex-1 p-3 sm:p-6 space-y-4 max-w-6xl w-full mx-auto hidden tab-content">
-      <div class="bg-gradient-to-r from-blue-700 to-indigo-700 rounded-3xl p-5 sm:p-6 text-white shadow-lg flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+    <main id="view-captain" class="flex-1 p-4 space-y-4 max-w-6xl w-full mx-auto hidden tab-content">
+      <div class="bg-gradient-to-r from-blue-700 to-indigo-700 rounded-3xl p-5 text-white shadow-lg flex flex-wrap justify-between items-center gap-3">
         <div>
-          <div class="text-[10px] sm:text-xs text-blue-200 font-bold uppercase tracking-wider">Mia組 • 隊長管理工作台</div>
-          <h2 id="cap-name-display" class="text-xl sm:text-2xl font-black mt-1">隊長工作台</h2>
+          <div class="text-xs text-blue-200 font-bold uppercase tracking-wider">Mia組 • 隊長管理工作台</div>
+          <h2 id="cap-name-display" class="text-2xl font-black mt-1">隊長工作台</h2>
           <p class="text-xs text-blue-100 mt-1">檢視轄下隊員報數、圍欄件數、簽收/退款單號與待攬收單號。</p>
         </div>
-        <div class="w-full sm:w-auto bg-white/10 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-white/20 text-left sm:text-right">
+        <div class="bg-white/10 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-white/20 text-right">
           <div class="text-xs text-blue-200">本隊今日總派票量</div>
-          <div id="cap-team-tickets" class="text-xl font-black mt-0.5">0 票</div>
+          <div id="cap-team-tickets" class="text-2xl font-black mt-0.5">0 票</div>
         </div>
       </div>
 
-      <div id="captain-mobile-cards" class="block md:hidden space-y-3"></div>
-
-      <div class="hidden md:block bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         <div class="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
           <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
             <i data-lucide="users" class="w-4 h-4 text-blue-600"></i> 我負責的隊員名單與單號
           </h3>
         </div>
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto table-scroll-container">
           <table class="w-full text-left text-xs border-collapse min-w-[1500px]">
-            <thead class="bg-slate-100/70 text-slate-600 font-semibold border-b border-slate-200 text-[11px]" id="captain-table-head"></thead>
+            <thead class="bg-slate-100/80 text-slate-600 font-semibold border-b border-slate-200 text-xs" id="captain-table-head"></thead>
             <tbody id="captain-table-body" class="divide-y divide-slate-100 text-slate-700"></tbody>
           </table>
         </div>
@@ -224,12 +234,12 @@
     </main>
 
     <!-- ==================== 3. 步兵獨立每日報數端 ==================== -->
-    <main id="view-rider" class="flex-1 p-3.5 hidden flex justify-center items-start pt-2 sm:pt-6 tab-content">
-      <div class="w-full max-w-lg bg-white border border-slate-200 rounded-3xl p-5 sm:p-6 shadow-xl space-y-4">
+    <main id="view-rider" class="flex-1 p-4 hidden flex justify-center items-start pt-4 tab-content">
+      <div class="w-full max-w-lg bg-white border border-slate-200 rounded-3xl p-6 shadow-xl space-y-4">
         
         <div class="flex justify-between items-start border-b border-slate-100 pb-3">
           <div>
-            <div class="text-[11px] text-slate-400 font-medium flex items-center gap-1">
+            <div class="text-xs text-slate-400 font-medium flex items-center gap-1">
               <span class="font-bold text-blue-600">Mia組</span> • 步兵個人每日報數
             </div>
             <h3 id="rider-name-display" class="text-lg font-extrabold text-slate-900 mt-0.5">
@@ -238,17 +248,17 @@
             <div id="rider-team-display" class="text-xs text-slate-500 font-semibold mt-0.5">所屬隊伍</div>
           </div>
           <div class="text-right">
-            <button onclick="openSelfPasswordModal()" class="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 px-2 py-1 rounded-lg font-bold hover:bg-amber-100 transition flex items-center gap-1 ml-auto">
+            <button onclick="openSelfPasswordModal()" class="text-xs text-amber-700 bg-amber-50 border border-amber-200 px-2 py-1 rounded-lg font-bold hover:bg-amber-100 transition flex items-center gap-1 ml-auto">
               <i data-lucide="key" class="w-3 h-3"></i> 修改密碼
             </button>
-            <div id="rider-payday-display" class="text-[10px] text-purple-700 font-bold bg-purple-50 px-2 py-0.5 rounded border border-purple-200 mt-1.5 inline-block">
+            <div id="rider-payday-display" class="text-[11px] text-purple-700 font-bold bg-purple-50 px-2 py-0.5 rounded border border-purple-200 mt-1.5 inline-block">
               糧期: 隔日結算
             </div>
           </div>
         </div>
 
         <!-- 步兵各圍欄票價標籤列 -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-center text-[11px]" id="rider-fence-badges"></div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-center text-xs" id="rider-fence-badges"></div>
 
         <div id="rider-form" class="space-y-3.5">
           
@@ -297,11 +307,11 @@
           <!-- 預支借支 / 扣糧 -->
           <div class="grid grid-cols-2 gap-2 bg-slate-50 p-3 rounded-2xl border border-slate-200">
             <div>
-              <label class="text-[11px] font-bold text-orange-700 block mb-1">預支借支 ($)</label>
+              <label class="text-xs font-bold text-orange-700 block mb-1">預支借支 ($)</label>
               <input id="inp-rider-advance" type="number" value="0" oninput="recalcRiderTally()" class="w-full bg-white border border-orange-200 rounded-lg p-1.5 text-center font-bold text-orange-700 text-sm">
             </div>
             <div>
-              <label class="text-[11px] font-bold text-rose-700 block mb-1">工單罰款/扣糧 ($)</label>
+              <label class="text-xs font-bold text-rose-700 block mb-1">工單罰款/扣糧 ($)</label>
               <input id="inp-rider-deduct" type="number" value="0" oninput="recalcRiderTally()" class="w-full bg-white border border-rose-200 rounded-lg p-1.5 text-center font-bold text-rose-700 text-sm">
             </div>
           </div>
@@ -312,17 +322,17 @@
               <span>總派票量: <b id="pv-total-t" class="text-white text-sm">0</b> 票</span>
               <span>應發總額(毛): <b class="text-emerald-400 text-sm">$<span id="pv-gross-amt">0</span></b></span>
             </div>
-            <div class="flex justify-between text-slate-400 text-[11px] pt-1 border-t border-slate-800">
+            <div class="flex justify-between text-slate-400 text-xs pt-1 border-t border-slate-800">
               <span id="pv-fence-breakdown">分區明細</span>
               <span>簽收: <b id="pv-signed-txt" class="text-emerald-400">0</b> | 退款: <b id="pv-refund-txt" class="text-rose-400">0</b></span>
             </div>
             <div class="pt-2 border-t border-slate-800 grid grid-cols-2 gap-2 text-center">
               <div class="bg-slate-800/80 p-2 rounded-xl">
-                <div class="text-[10px] text-slate-400">預計實出工資</div>
+                <div class="text-[11px] text-slate-400">預計實出工資</div>
                 <div class="text-base font-black text-emerald-400 mt-0.5">$<span id="pv-net-amt">0</span></div>
               </div>
               <div class="bg-slate-800/80 p-2 rounded-xl">
-                <div class="text-[10px] text-slate-400">剩餘工資 / 欠款</div>
+                <div class="text-[11px] text-slate-400">剩餘工資 / 欠款</div>
                 <div class="text-base font-black text-indigo-300 mt-0.5">$<span id="pv-remain-amt">0</span></div>
               </div>
             </div>
@@ -344,9 +354,9 @@
     </main>
 
     <!-- ==================== 4. 頁頂入口 6 - 過往報數紀錄 (History) ==================== -->
-    <main id="view-history" class="flex-1 p-3 sm:p-6 space-y-4 max-w-7xl w-full mx-auto hidden tab-content">
-      <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-sm space-y-4">
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-100 pb-3">
+    <main id="view-history" class="flex-1 p-4 space-y-4 max-w-7xl w-full mx-auto hidden tab-content">
+      <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
+        <div class="flex flex-wrap justify-between items-center gap-3 border-b border-slate-100 pb-3">
           <div>
             <h2 class="text-base font-extrabold text-slate-900 flex items-center gap-2">
               <i data-lucide="calendar" class="w-5 h-5 text-blue-600"></i> 6- 紀錄 - 過往報數紀錄清單
@@ -359,9 +369,9 @@
           </div>
         </div>
 
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto table-scroll-container">
           <table class="w-full text-left text-xs border-collapse min-w-[1100px]">
-            <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 text-[11px]">
+            <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 text-xs">
               <tr>
                 <th class="py-3 px-3">報數日期</th>
                 <th class="py-3 px-3">步兵姓名 (ID)</th>
@@ -383,8 +393,8 @@
     </main>
 
     <!-- ==================== 5. 頁頂入口 7 - 數據統計 (Stats) ==================== -->
-    <main id="view-stats" class="flex-1 p-3 sm:p-6 space-y-4 max-w-7xl w-full mx-auto hidden tab-content">
-      <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-sm space-y-5">
+    <main id="view-stats" class="flex-1 p-4 space-y-4 max-w-7xl w-full mx-auto hidden tab-content">
+      <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-5">
         
         <div>
           <h2 class="text-base font-extrabold text-slate-900 flex items-center gap-2">
@@ -425,28 +435,28 @@
 
         <!-- 統計指標看板 -->
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          <div class="bg-blue-50/60 border border-blue-200 p-3.5 rounded-2xl text-center">
-            <div class="text-[11px] font-bold text-blue-700">統計總票量</div>
+          <div class="bg-blue-50/60 border border-blue-200 p-4 rounded-2xl text-center">
+            <div class="text-xs font-bold text-blue-700">統計總票量</div>
             <div id="stat-res-tickets" class="text-xl font-black text-blue-900 mt-1">0 票</div>
           </div>
-          <div class="bg-emerald-50/60 border border-emerald-200 p-3.5 rounded-2xl text-center">
-            <div class="text-[11px] font-bold text-emerald-700">總簽收件數</div>
+          <div class="bg-emerald-50/60 border border-emerald-200 p-4 rounded-2xl text-center">
+            <div class="text-xs font-bold text-emerald-700">總簽收件數</div>
             <div id="stat-res-signed" class="text-xl font-black text-emerald-900 mt-1">0 件</div>
           </div>
-          <div class="bg-rose-50/60 border border-rose-200 p-3.5 rounded-2xl text-center">
-            <div class="text-[11px] font-bold text-rose-700">總退款件數</div>
+          <div class="bg-rose-50/60 border border-rose-200 p-4 rounded-2xl text-center">
+            <div class="text-xs font-bold text-rose-700">總退款件數</div>
             <div id="stat-res-refunded" class="text-xl font-black text-rose-900 mt-1">0 件</div>
           </div>
-          <div class="bg-amber-50/60 border border-amber-200 p-3.5 rounded-2xl text-center">
-            <div class="text-[11px] font-bold text-amber-800">清場待攬收殘留</div>
+          <div class="bg-amber-50/60 border border-amber-200 p-4 rounded-2xl text-center">
+            <div class="text-xs font-bold text-amber-800">清場待攬收殘留</div>
             <div id="stat-res-pending" class="text-xl font-black text-amber-900 mt-1">0 件</div>
           </div>
-          <div class="bg-indigo-50/60 border border-indigo-200 p-3.5 rounded-2xl text-center">
-            <div class="text-[11px] font-bold text-indigo-700">應發總工資</div>
+          <div class="bg-indigo-50/60 border border-indigo-200 p-4 rounded-2xl text-center">
+            <div class="text-xs font-bold text-indigo-700">應發總工資</div>
             <div id="stat-res-gross" class="text-xl font-black text-indigo-900 mt-1">$0</div>
           </div>
-          <div class="bg-slate-900 text-white p-3.5 rounded-2xl text-center">
-            <div class="text-[11px] font-bold text-emerald-400">實出總工資</div>
+          <div class="bg-slate-900 text-white p-4 rounded-2xl text-center">
+            <div class="text-xs font-bold text-emerald-400">實出總工資</div>
             <div id="stat-res-net" class="text-xl font-black text-emerald-400 mt-1">$0</div>
           </div>
         </div>
@@ -454,7 +464,7 @@
         <!-- 區間明細記錄 -->
         <div class="border-t border-slate-100 pt-4">
           <h3 class="text-xs font-bold text-slate-700 mb-2">符合條件之明細清單：</h3>
-          <div class="overflow-x-auto max-h-96">
+          <div class="overflow-x-auto table-scroll-container max-h-96">
             <table class="w-full text-left text-xs border-collapse">
               <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 sticky top-0">
                 <tr>
@@ -479,7 +489,7 @@
 
   <!-- ==================== 彈窗 1：單號明細彈窗 ==================== -->
   <div id="modal-tracking-numbers" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
-    <div class="bg-white rounded-3xl p-5 sm:p-6 max-w-lg w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+    <div class="bg-white rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b border-slate-100 pb-3">
         <div>
           <h3 id="modal-track-title" class="font-bold text-base text-slate-900 flex items-center gap-2">
@@ -514,7 +524,7 @@
 
   <!-- ==================== 彈窗 2：圍欄與分工管理彈窗 ==================== -->
   <div id="modal-manage-fences" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
-    <div class="bg-white rounded-3xl p-5 sm:p-6 max-w-lg w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+    <div class="bg-white rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b border-slate-100 pb-3">
         <h3 class="font-bold text-base text-slate-900 flex items-center gap-2">
           <i data-lucide="map-pin" class="w-5 h-5 text-purple-600"></i> 圍欄與分工管理中心
@@ -522,13 +532,11 @@
         <button onclick="closeManageFencesModal()" class="text-slate-400 hover:text-slate-600 p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
       </div>
 
-      <!-- 現有圍欄列表 (支援刪除與查看) -->
       <div class="space-y-2">
         <h4 class="text-xs font-bold text-slate-700">現有圍欄區域 (含預設與自訂)：</h4>
         <div id="fences-manage-list" class="space-y-1.5 max-h-48 overflow-y-auto"></div>
       </div>
 
-      <!-- 新增自訂圍欄區塊 -->
       <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-2.5 text-xs">
         <div class="font-bold text-slate-800 flex items-center gap-1">
           <i data-lucide="plus-circle" class="w-4 h-4 text-emerald-600"></i> ＋ 新增自訂圍欄 / 分區分工
@@ -550,9 +558,9 @@
     </div>
   </div>
 
-  <!-- ==================== 彈窗 3：總管理員新增普通步兵帳戶 ==================== -->
+  <!-- ==================== 彈窗 3：新增普通步兵帳戶 ==================== -->
   <div id="modal-add-rider" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
-    <div class="bg-white rounded-3xl p-5 sm:p-6 max-w-md w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+    <div class="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b border-slate-100 pb-3">
         <h3 class="font-bold text-base text-slate-900 flex items-center gap-2">
           <i data-lucide="user-plus" class="w-5 h-5 text-blue-600"></i> 新增普通步兵帳戶
@@ -614,7 +622,7 @@
 
   <!-- ==================== 彈窗 4：修改密碼彈窗 ==================== -->
   <div id="modal-change-password" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
-    <div class="bg-white rounded-3xl p-5 sm:p-6 max-w-sm w-full shadow-2xl space-y-4">
+    <div class="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl space-y-4">
       <div class="flex justify-between items-center border-b border-slate-100 pb-3">
         <h3 id="modal-pwd-title" class="font-bold text-base text-slate-900 flex items-center gap-2">
           <i data-lucide="key" class="w-5 h-5 text-amber-600"></i> 修改密碼
@@ -649,7 +657,7 @@
       { key: 'eastern', name: '東區', defaultPrice: 4, isCore: true }
     ];
 
-    // 初始帳號（含管理員、三大隊長）
+    // 初始帳號
     const initialBase = [
       { id: 'ADMIN', name: '總管理員 Mia', role: '管理員', team: 'Mia自營隊', prefix: 'ADMIN', password: 'mia888',
         counts: { laguna: 0, koko: 0, industrial: 0, eastern: 0 },
@@ -676,22 +684,20 @@
         payday: '隔日結算', commission: 0, penalty: 0, comp: 0, deduct: 0, advance: 0, paidToday: 0, payoutStatus: '待轉帳' }
     ];
 
-    // 最新版儲存鍵值：MIA_STABLE_V6
-    let fences = JSON.parse(localStorage.getItem('MIA_STABLE_V6_FENCES')) || defaultFences;
-    let accounts = JSON.parse(localStorage.getItem('MIA_STABLE_V6_ACCOUNTS')) || initialBase;
-    let historyRecords = JSON.parse(localStorage.getItem('MIA_STABLE_V6_HIST')) || [];
+    let fences = JSON.parse(localStorage.getItem('MIA_UNIFIED_V7_FENCES')) || defaultFences;
+    let accounts = JSON.parse(localStorage.getItem('MIA_UNIFIED_V7_ACCOUNTS')) || initialBase;
+    let historyRecords = JSON.parse(localStorage.getItem('MIA_UNIFIED_V7_HIST')) || [];
     
     let loggedInUser = null;
     let editingTrackIdx = -1;
     let pwdTargetIdx = -1;
 
     function saveData() {
-      localStorage.setItem('MIA_STABLE_V6_FENCES', JSON.stringify(fences));
-      localStorage.setItem('MIA_STABLE_V6_ACCOUNTS', JSON.stringify(accounts));
-      localStorage.setItem('MIA_STABLE_V6_HIST', JSON.stringify(historyRecords));
+      localStorage.setItem('MIA_UNIFIED_V7_FENCES', JSON.stringify(fences));
+      localStorage.setItem('MIA_UNIFIED_V7_ACCOUNTS', JSON.stringify(accounts));
+      localStorage.setItem('MIA_UNIFIED_V7_HIST', JSON.stringify(historyRecords));
     }
 
-    // 登入驗證
     function handleLogin() {
       const u = document.getElementById('login-username').value.trim().toUpperCase();
       const p = document.getElementById('login-password').value.trim();
@@ -726,17 +732,17 @@
 
       if (loggedInUser.role === 'admin') {
         badge.innerText = '👑 總管理員';
-        badge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-bold';
+        badge.className = 'text-[11px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-bold';
         info.innerText = 'Mia (最高權限：可查看密碼、新增/刪除圍欄分工、結算發薪)';
         btnClearHist.classList.remove('hidden');
       } else if (loggedInUser.role === 'captain') {
         badge.innerText = '🎖️ 隊長';
-        badge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 font-bold';
+        badge.className = 'text-[11px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 font-bold';
         info.innerText = `${loggedInUser.name} (${loggedInUser.id})`;
         btnClearHist.classList.add('hidden');
       } else {
         badge.innerText = '🏃 普通步兵';
-        badge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold';
+        badge.className = 'text-[11px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold';
         info.innerText = `${loggedInUser.name} (${loggedInUser.id} • ${loggedInUser.team})`;
         btnClearHist.classList.add('hidden');
       }
@@ -755,7 +761,6 @@
       lucide.createIcons();
     }
 
-    // 頁頂導航切換
     function switchNavTab(tab) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
       document.getElementById('nav-btn-main').className = 'px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1 border border-slate-200';
@@ -786,15 +791,13 @@
       lucide.createIcons();
     }
 
-    // ==================== 1. 總管理員工作台渲染 ====================
+    // ==================== 1. 總管理員工作台渲染 (統一完整大表比例) ====================
     function renderAdminView() {
       const filter = document.getElementById('adm-filter-team').value;
       const thead = document.getElementById('admin-table-head');
       const tbody = document.getElementById('admin-table-body');
-      const mobileContainer = document.getElementById('admin-mobile-cards');
       
       tbody.innerHTML = '';
-      mobileContainer.innerHTML = '';
 
       let fenceHeadersHTML = '';
       fences.forEach(f => {
@@ -806,8 +809,8 @@
 
       thead.innerHTML = `
         <tr>
-          <th class="py-3 px-4 sticky left-0 bg-slate-100/90 backdrop-blur-sm z-10">步兵姓名 (ID)</th>
-          <th class="py-3 px-2 text-center text-amber-800 bg-amber-50/60">密碼 (點擊改)</th>
+          <th class="py-3 px-4 sticky left-0 bg-slate-100/95 backdrop-blur-sm z-20 shadow-sm">步兵姓名 (ID)</th>
+          <th class="py-3 px-2 text-center text-amber-800 bg-amber-50/70">密碼 (點擊改)</th>
           ${fenceHeadersHTML}
           <th class="py-3 px-2 text-center font-bold">總票量</th>
           <th class="py-3 px-2 text-center text-emerald-700">簽收 (件/單號)</th>
@@ -858,55 +861,6 @@
         totalPaidToday += (acc.paidToday || 0);
         if (remainDebt > 0) totalDebt += remainDebt;
 
-        // 手機端卡片
-        let mFencesHTML = '';
-        fences.forEach(f => {
-          const cnt = acc.counts[f.key] || 0;
-          const prc = acc.prices[f.key];
-          mFencesHTML += `
-            <div class="bg-blue-50/50 p-1.5 rounded-lg border border-blue-100 text-center">
-              <div class="text-[10px] text-blue-700 font-bold">${f.name} (件)</div>
-              <input type="number" value="${cnt}" onchange="updateAccountNestedField(${idx}, 'counts', '${f.key}', this.value)" class="w-full bg-white border border-slate-200 rounded p-1 text-center font-bold text-blue-700 mt-1">
-              <div class="text-[10px] text-blue-900 font-bold mt-0.5">$<input type="number" step="0.5" value="${prc}" onchange="updateAccountNestedField(${idx}, 'prices', '${f.key}', this.value)" class="w-9 bg-white border border-blue-200 rounded text-center"></div>
-            </div>
-          `;
-        });
-
-        const card = document.createElement('div');
-        card.className = `bg-white rounded-2xl border ${acc.pendingPickup > 0 ? 'border-amber-400 bg-amber-50/20' : 'border-slate-200/90'} p-4 shadow-sm space-y-3`;
-        card.innerHTML = `
-          <div class="flex justify-between items-start border-b border-slate-100 pb-2">
-            <div>
-              <div class="flex items-center gap-1.5">
-                <input type="text" value="${acc.name}" onchange="updateAccountFieldStr(${idx}, 'name', this.value)" class="font-extrabold text-base text-slate-900 bg-transparent border-b border-transparent focus:border-blue-500 focus:bg-white px-1 py-0.5 rounded outline-none w-28">
-                <span class="text-xs px-2 py-0.5 rounded font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200">${acc.id}</span>
-              </div>
-              <div class="text-[11px] text-slate-400 mt-0.5">${acc.team} • ${acc.role}</div>
-            </div>
-            <button onclick="openChangePasswordModal(${idx})" class="px-2 py-1 bg-amber-50 text-amber-800 border border-amber-200 rounded-lg text-xs font-mono font-bold">
-              🔑 ${acc.password || '8888'}
-            </button>
-          </div>
-          <div class="grid grid-cols-2 gap-1.5 text-xs">${mFencesHTML}</div>
-          <div class="bg-slate-50 p-2 rounded-xl border border-slate-200 flex items-center justify-between text-xs">
-            <span class="text-[11px] text-slate-600 font-semibold">📋 快件單號明細</span>
-            <button onclick="openTrackingModal(${idx})" class="px-2.5 py-1 bg-white border border-slate-300 text-blue-700 font-bold rounded-lg hover:bg-blue-50 text-[11px]">
-              查閱/修改單號
-            </button>
-          </div>
-          <div class="pt-2 border-t border-slate-100 flex justify-between items-center">
-            <div>
-              <div class="text-[10px] text-slate-400">總票量: <b class="text-slate-800">${ticketCount} 票</b></div>
-              <div class="text-base font-black text-emerald-600">應發工資: $${netWage}</div>
-            </div>
-            <button onclick="payFullWage(${idx}, ${netWage})" class="px-3 py-1 bg-emerald-600 text-white rounded-lg text-xs font-bold">
-              全額實出
-            </button>
-          </div>
-        `;
-        mobileContainer.appendChild(card);
-
-        // 電腦端行
         let deskFencesHTML = '';
         fences.forEach(f => {
           const cnt = acc.counts[f.key] || 0;
@@ -1055,7 +1009,7 @@
 
       thead.innerHTML = `
         <tr>
-          <th class="py-3 px-4 sticky left-0 bg-slate-100/90 z-10">隊員姓名 (ID)</th>
+          <th class="py-3 px-4 sticky left-0 bg-slate-100/95 z-20 shadow-sm">隊員姓名 (ID)</th>
           ${capFenceHeadersHTML}
           <th class="py-3 px-2 text-center font-bold">總票量</th>
           <th class="py-3 px-2 text-center text-emerald-700">簽收 (件)</th>
@@ -1148,7 +1102,7 @@
           <div class="p-2.5 bg-blue-50/50 rounded-2xl border border-blue-100 flex justify-between items-center">
             <label class="text-xs font-bold text-blue-800">📍 ${f.name} ($${prc}/件)</label>
             <div class="flex items-center gap-1">
-              <span class="text-[11px] text-slate-500 font-medium">件數:</span>
+              <span class="text-xs text-slate-500 font-medium">件數:</span>
               <input id="inp-fence-${f.key}" type="number" value="${cnt}" oninput="recalcRiderTally()" class="w-16 bg-white border border-blue-300 rounded-lg p-1.5 text-center font-bold text-blue-700 text-sm">
             </div>
           </div>
@@ -1226,7 +1180,6 @@
 
       const todayStr = new Date().toISOString().split('T')[0];
 
-      // 自動記錄至過往歷史封存清單
       historyRecords.unshift({
         date: todayStr,
         id: acc.id,
@@ -1301,7 +1254,7 @@
           <td class="py-3 px-3 text-right font-bold text-slate-900">$${r.gross || 0}</td>
           <td class="py-3 px-3 text-right font-black text-emerald-600">$${r.netWage || 0}</td>
           <td class="py-3 px-3 text-center">
-            <button onclick="viewHistoryNos('${encodeURIComponent(r.signedNos || '')}', '${encodeURIComponent(r.refundedNos || '')}', '${encodeURIComponent(r.pendingPickupNos || '')}', '${r.name}')" class="px-2 py-1 bg-slate-100 hover:bg-blue-50 text-blue-700 rounded font-semibold text-[11px]">
+            <button onclick="viewHistoryNos('${encodeURIComponent(r.signedNos || '')}', '${encodeURIComponent(r.refundedNos || '')}', '${encodeURIComponent(r.pendingPickupNos || '')}', '${r.name}')" class="px-2 py-1 bg-slate-100 hover:bg-blue-50 text-blue-700 rounded font-semibold text-xs">
               查單號
             </button>
           </td>
@@ -1446,7 +1399,7 @@
       list.innerHTML = '';
       fences.forEach((f, idx) => {
         list.innerHTML += `
-          <div class="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-200">
+          <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200">
             <div>
               <span class="font-bold text-slate-800">${f.name}</span>
               <span class="text-xs text-slate-400 font-mono ml-2">預設 $${f.defaultPrice}/件</span>
@@ -1456,7 +1409,7 @@
               <button onclick="deleteCustomFence(${idx})" class="p-1 text-rose-600 hover:bg-rose-50 rounded" title="刪除此圍欄分工">
                 <i data-lucide="trash-2" class="w-4 h-4"></i>
               </button>
-            ` : '<span class="text-[10px] text-slate-400">固定圍欄</span>'}
+            ` : '<span class="text-xs text-slate-400">固定圍欄</span>'}
           </div>
         `;
       });
