@@ -21,7 +21,7 @@
 </head>
 <body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col antialiased overflow-x-hidden">
 
-  <!-- ==================== 0. 登入門禁畫面 (已移除任何提示，保證隱私) ==================== -->
+  <!-- ==================== 0. 登入門禁畫面 (完全不洩漏帳號密碼) ==================== -->
   <div id="view-login" class="flex-1 flex items-center justify-center p-4 min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950">
     <div class="w-full max-w-sm bg-white rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6">
       
@@ -162,7 +162,7 @@
             <span class="px-2 py-0.5 bg-blue-600 text-white rounded text-xs font-black">Mia組</span>
             全體派貨員薪酬結算、分區件數與快件單號明細表
           </h2>
-          <span class="text-xs text-slate-400">所有名字與數值可直接在表格內修改 (自動儲存)</span>
+          <span class="text-xs text-slate-400">所有名字、隊長票價與數值可直接在表格內修改 (自動儲存)</span>
         </div>
 
         <div class="overflow-x-auto">
@@ -177,7 +177,7 @@
                 <th class="py-3 px-2 text-center text-emerald-700">已簽收</th>
                 <th class="py-3 px-2 text-center text-rose-700 font-bold bg-rose-50/30">已退款</th>
                 <th class="py-3 px-2 text-center text-amber-700 font-bold bg-amber-50/40">圍欄待攬收</th>
-                <th class="py-3 px-2 text-center text-blue-700 font-bold bg-blue-50/40">票價</th>
+                <th class="py-3 px-2 text-center text-blue-700 font-bold bg-blue-50/40">單票票價 ($)</th>
                 <th class="py-3 px-2 text-center font-bold">總金額(毛)</th>
                 <th class="py-3 px-2 text-center text-amber-700 font-bold bg-amber-50/30">隊長抽佣</th>
                 <th class="py-3 px-2 text-center text-rose-600 font-medium">工單罰款</th>
@@ -230,7 +230,7 @@
                 <th class="py-3 px-2 text-center text-emerald-700">已簽收</th>
                 <th class="py-3 px-2 text-center text-rose-700 font-bold">已退款</th>
                 <th class="py-3 px-3 text-center text-amber-700 font-bold">圍欄待攬收</th>
-                <th class="py-3 px-2 text-center text-blue-700">票價</th>
+                <th class="py-3 px-2 text-center text-blue-700">票價 ($)</th>
                 <th class="py-3 px-3 text-center text-amber-700 font-bold">隊長抽佣 ($)</th>
                 <th class="py-3 px-3 text-center text-emerald-700 font-bold">預估工資</th>
               </tr>
@@ -464,12 +464,12 @@
         signed: 0, refunded: 0, pendingPickup: 0, price: 16, payday: '每月 15 號 (月結)', commission: 0, penalty: 0, comp: 0, deduct: 0, advance: 0, paidToday: 0, payoutStatus: '待轉帳' }
     ];
 
-    let accounts = JSON.parse(localStorage.getItem('MIA_COURIER_PROD_DATA_2026')) || initialBase;
+    let accounts = JSON.parse(localStorage.getItem('MIA_COURIER_PRICE_FIX_2026')) || initialBase;
     let loggedInUser = null;
     let editingTrackIdx = -1;
 
     function saveData() {
-      localStorage.setItem('MIA_COURIER_PROD_DATA_2026', JSON.stringify(accounts));
+      localStorage.setItem('MIA_COURIER_PRICE_FIX_2026', JSON.stringify(accounts));
     }
 
     function clearAllData() {
@@ -573,6 +573,7 @@
       lucide.createIcons();
     }
 
+    // 總管理員全盤渲染（隊長及步兵票價全面開放輸入框）
     function renderAdminView() {
       const filter = document.getElementById('adm-filter-team').value;
       const tbody = document.getElementById('admin-table-body');
@@ -595,7 +596,7 @@
         if (filter !== 'all' && acc.team !== filter) return;
 
         const ticketCount = (acc.laguna || 0) + (acc.industrial || 0) + (acc.eastern || 0);
-        const gross = ticketCount * acc.price;
+        const gross = ticketCount * (acc.price || 0);
         const commVal = acc.role === '隊長' ? (acc.commission || 0) : 0;
         
         const netWage = gross - commVal - (acc.penalty || 0) - (acc.comp || 0) - (acc.deduct || 0);
@@ -615,6 +616,7 @@
           inDebtCount++;
         }
 
+        // 手機端卡片 (含票價即時輸入框)
         const card = document.createElement('div');
         card.className = `bg-white rounded-2xl border ${acc.pendingPickup > 0 ? 'border-amber-400 bg-amber-50/20' : 'border-slate-200/90'} p-4 shadow-sm space-y-3`;
         card.innerHTML = `
@@ -628,7 +630,11 @@
               <div class="text-[11px] text-slate-400 mt-0.5">${acc.team}</div>
             </div>
             <div class="text-right flex-shrink-0">
-              <div class="text-xs font-black text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-md">$${acc.price} / 票</div>
+              <div class="flex items-center justify-end gap-1 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-md">
+                <span class="text-xs font-bold text-blue-700">$</span>
+                <input type="number" value="${acc.price || 0}" onchange="updateAccountField(${idx}, 'price', this.value)" class="w-10 bg-transparent text-xs font-black text-blue-700 text-center outline-none">
+                <span class="text-[10px] text-blue-600">/票</span>
+              </div>
               <div class="text-[10px] font-bold text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded mt-1 border border-purple-200">${acc.payday}</div>
             </div>
           </div>
@@ -712,6 +718,7 @@
         `;
         mobileContainer.appendChild(card);
 
+        // 電腦端表格行
         const tr = document.createElement('tr');
         tr.className = `hover:bg-slate-50/80 transition ${acc.pendingPickup > 0 ? 'bg-amber-50/20' : ''}`;
         tr.innerHTML = `
@@ -759,8 +766,9 @@
             </div>
           </td>
 
+          <!-- 票價：開放修改輸入框 -->
           <td class="py-3 px-2 text-center bg-blue-50/40">
-            <input type="number" value="${acc.price}" onchange="updateAccountField(${idx}, 'price', this.value)" class="w-11 bg-white border border-blue-300 rounded p-1 text-center font-black text-blue-700">
+            <input type="number" value="${acc.price || 0}" onchange="updateAccountField(${idx}, 'price', this.value)" class="w-12 bg-white border border-blue-300 rounded p-1 text-center font-black text-blue-700 focus:ring-2 focus:ring-blue-500">
           </td>
 
           <td class="py-3 px-2 text-center font-bold text-slate-800">$${gross}</td>
@@ -842,6 +850,14 @@
       lucide.createIcons();
     }
 
+    function payFullWage(idx, wage) {
+      accounts[idx].paidToday = wage > 0 ? wage : 0;
+      accounts[idx].payoutStatus = '已轉帳出糧';
+      saveData();
+      renderAdminView();
+    }
+
+    // 隊長專屬工作台（隊長亦可直接調整票價輸入框）
     function renderCaptainView(capId) {
       const cap = accounts.find(a => a.id === capId);
       document.getElementById('cap-name-display').innerText = `${cap.name} (${cap.id})`;
@@ -854,8 +870,7 @@
       let teamTickets = 0;
       accounts.filter(a => a.team === cap.team).forEach((acc) => {
         const tCount = (acc.laguna || 0) + (acc.industrial || 0) + (acc.eastern || 0);
-        teamTickets += tCount;
-        const gross = tCount * acc.price;
+        const gross = tCount * (acc.price || 0);
         const net = gross - (acc.penalty || 0) - (acc.comp || 0) - (acc.deduct || 0);
 
         const globalIdx = accounts.findIndex(x => x.id === acc.id);
@@ -869,7 +884,11 @@
               <span class="text-xs px-2 py-0.5 rounded font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200">${acc.id}</span>
               <span class="text-[10px] text-slate-400 font-mono">(${acc.role})</span>
             </div>
-            <div class="text-xs font-bold text-blue-700">$${acc.price} / 票</div>
+            <div class="flex items-center gap-1 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-md">
+              <span class="text-xs font-bold text-blue-700">$</span>
+              <input type="number" value="${acc.price || 0}" onchange="updateAccountField(${globalIdx}, 'price', this.value); renderCaptainView('${capId}');" class="w-10 bg-transparent text-xs font-black text-blue-700 text-center outline-none">
+              <span class="text-[10px] text-blue-600">/票</span>
+            </div>
           </div>
           <div class="grid grid-cols-4 gap-1.5 text-center text-xs">
             <div>
@@ -941,7 +960,9 @@
           <td class="py-3 px-3 text-center">
             <input type="number" value="${acc.pendingPickup || 0}" onchange="updateAccountField(${globalIdx}, 'pendingPickup', this.value);" class="w-10 bg-white border border-amber-300 rounded p-1 text-center font-bold text-amber-700">
           </td>
-          <td class="py-3 px-2 text-center font-bold text-blue-700">$${acc.price}</td>
+          <td class="py-3 px-2 text-center font-bold text-blue-700">
+            <input type="number" value="${acc.price || 0}" onchange="updateAccountField(${globalIdx}, 'price', this.value); renderCaptainView('${capId}');" class="w-11 bg-white border border-blue-300 rounded p-1 text-center font-bold text-blue-700">
+          </td>
           <td class="py-3 px-3 text-center">
             ${acc.role === '隊長' ? `
               <input type="number" value="${acc.commission || 0}" onchange="updateAccountField(${globalIdx}, 'commission', this.value);" class="w-14 bg-amber-50 border border-amber-300 rounded p-1 text-center font-bold text-amber-700">
@@ -987,13 +1008,13 @@
       const refunded = Number(document.getElementById('inp-refunded').value) || 0;
       const tot = lag + ind + eas;
 
-      const gross = tot * acc.price;
+      const gross = tot * (acc.price || 0);
 
       document.getElementById('pv-laguna').innerText = lag;
       document.getElementById('pv-industrial').innerText = ind;
       document.getElementById('pv-eastern').innerText = eas;
       document.getElementById('pv-total-t').innerText = tot;
-      document.getElementById('pv-price').innerText = acc.price;
+      document.getElementById('pv-price').innerText = acc.price || 0;
       document.getElementById('pv-signed-txt').innerText = signed;
       document.getElementById('pv-refund-txt').innerText = refunded;
       document.getElementById('pv-gross-amt').innerText = gross;
