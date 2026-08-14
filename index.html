@@ -1,0 +1,1613 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1280, initial-scale=0.35, minimum-scale=0.2, maximum-scale=2.0, user-scalable=yes">
+  <title>Mia組 - 派貨員獨立報數與對數結算系統</title>
+  <!-- Tailwind CSS & Lucide Icons -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { 
+      font-family: 'Plus Jakarta Sans', 'Noto Sans TC', system-ui, -apple-system, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      min-width: 1200px;
+    }
+    input[type=number]::-webkit-inner-spin-button, 
+    input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    .table-scroll-container::-webkit-scrollbar { height: 10px; width: 10px; }
+    .table-scroll-container::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+    .table-scroll-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .table-scroll-container::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col antialiased">
+
+  <!-- ==================== 0. 登入門禁畫面 ==================== -->
+  <div id="view-login" class="flex-1 flex items-center justify-center p-4 min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950">
+    <div class="w-full max-w-sm bg-white rounded-3xl p-6 sm:p-8 shadow-2xl space-y-5">
+      
+      <div class="text-center space-y-2">
+        <div class="inline-flex h-12 px-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 items-center justify-center text-white shadow-lg shadow-blue-500/30 font-black text-lg tracking-wider">
+          Mia組
+        </div>
+        <h2 class="text-lg font-extrabold text-slate-900">派件報數與薪酬結算系統</h2>
+        <p class="text-xs text-slate-500">請輸入帳號密碼，或點擊下方快捷登入</p>
+      </div>
+
+      <div class="space-y-3.5 text-xs">
+        <div>
+          <label class="font-bold text-slate-700 block mb-1">登入帳號 / 步兵編號 (ID)</label>
+          <input id="login-username" type="text" placeholder="例如 ADMIN / A001 / KM001" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition uppercase">
+        </div>
+
+        <div>
+          <label class="font-bold text-slate-700 block mb-1">登入密碼</label>
+          <input id="login-password" type="password" placeholder="請輸入密碼" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition">
+        </div>
+
+        <div id="login-error-msg" class="p-2.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-600 font-bold text-[11px] text-center hidden">
+          帳號或密碼不正確，請重新輸入！
+        </div>
+
+        <button onclick="handleLogin()" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold transition shadow-lg shadow-blue-600/30 active:scale-98 flex items-center justify-center gap-2">
+          <i data-lucide="log-in" class="w-4 h-4"></i> 安全登入系統
+        </button>
+
+        <div class="pt-2 border-t border-slate-100">
+          <button onclick="quickAdminLogin()" class="w-full py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold transition shadow-md shadow-blue-500/20 active:scale-98 flex items-center justify-center gap-1.5">
+            👑 一鍵進入【總管理員 Mia 大表】
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ==================== 系統主體區域 ==================== -->
+  <div id="app-container" class="hidden flex-1 flex flex-col min-h-screen w-full">
+    
+    <!-- 頂部全域導航列 -->
+    <header class="bg-white border-b border-slate-200 px-6 py-3 sticky top-0 z-50 shadow-sm w-full">
+      <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
+        
+        <div class="flex items-center gap-3 cursor-pointer" onclick="switchNavTab('main')">
+          <div class="h-10 px-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20 font-black text-sm tracking-wider flex-shrink-0">
+            Mia組
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h1 class="font-extrabold text-base text-slate-900 leading-tight">派件報數結算系統</h1>
+              <span id="header-role-badge" class="text-xs px-2.5 py-0.5 rounded-full font-bold leading-none">身份</span>
+            </div>
+            <p id="header-user-info" class="text-xs text-slate-500">登入中</p>
+          </div>
+        </div>
+
+        <!-- 頂部功能入口 -->
+        <div class="flex items-center gap-2">
+          <button id="nav-btn-main" onclick="switchNavTab('main')" class="px-3.5 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-bold transition flex items-center gap-1">
+            <i data-lucide="layout-dashboard" class="w-3.5 h-3.5"></i> 主工作台
+          </button>
+          
+          <button id="nav-btn-history" onclick="switchNavTab('history')" class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1 border border-slate-200">
+            <i data-lucide="calendar" class="w-3.5 h-3.5 text-blue-600"></i> 6- 紀錄 (過往報數)
+          </button>
+          <button id="nav-btn-stats" onclick="switchNavTab('stats')" class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1 border border-slate-200">
+            <i data-lucide="bar-chart-3" class="w-3.5 h-3.5 text-emerald-600"></i> 7- 數據 (統計分析)
+          </button>
+          <button id="nav-btn-pwd" onclick="openSelfPasswordModal()" class="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold transition flex items-center gap-1 border border-amber-200">
+            <i data-lucide="key" class="w-3.5 h-3.5 text-amber-600"></i> 改密碼
+          </button>
+          <button onclick="handleLogout()" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl text-xs font-bold transition flex items-center gap-1 border border-rose-200">
+            <i data-lucide="log-out" class="w-3.5 h-3.5"></i> 登出
+          </button>
+        </div>
+
+      </div>
+    </header>
+
+    <!-- ==================== 1. 總管理員工作台 (全盤大表) ==================== -->
+    <main id="view-admin" class="flex-1 p-6 space-y-5 max-w-7xl w-full mx-auto hidden tab-content">
+      
+      <!-- 頂部統計指標看板 -->
+      <div class="grid grid-cols-4 gap-4">
+        <div class="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between">
+          <div>
+            <div class="text-xs font-semibold text-slate-500">今日全隊總票量</div>
+            <div id="adm-stat-tickets" class="text-2xl font-black text-slate-900 mt-1">0 票</div>
+          </div>
+          <div class="text-xs text-blue-600 font-semibold mt-2 flex items-center justify-between">
+            <span>簽收: <b id="adm-stat-signed">0</b></span>
+            <span class="text-rose-600 font-bold">退款: <b id="adm-stat-refunded">0</b></span>
+          </div>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between">
+          <div>
+            <div class="text-xs font-semibold text-slate-500">圍欄清場待攬收殘留</div>
+            <div id="adm-stat-pending-pickup" class="text-2xl font-black text-slate-700 mt-1">0 件殘留</div>
+          </div>
+          <div class="text-xs text-slate-500 font-medium mt-2 flex items-center gap-1">
+            <i data-lucide="alert-circle" class="w-3.5 h-3.5 text-amber-500 flex-shrink-0"></i> <span id="adm-stat-pending-pickup-riders">0</span> 人待攬收異常
+          </div>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between">
+          <div>
+            <div class="text-xs font-semibold text-slate-500">今日應發總工資</div>
+            <div id="adm-stat-net" class="text-2xl font-black text-emerald-600 mt-1">$0</div>
+          </div>
+          <div class="text-xs text-emerald-600 font-medium mt-2">已扣除工單、扣糧與借支</div>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between">
+          <div>
+            <div class="text-xs font-semibold text-slate-500">今日實出 / 剩餘結欠</div>
+            <div class="text-sm font-black mt-1 space-y-0.5">
+              <div class="text-indigo-600">實出工資: <span id="adm-stat-paid-today">$0</span></div>
+              <div class="text-rose-600">剩餘結欠: <span id="adm-stat-debt">$0</span></div>
+            </div>
+          </div>
+          <div class="text-[11px] text-slate-400 mt-1">依約定糧期發放</div>
+        </div>
+      </div>
+
+      <!-- 管理員操作列 -->
+      <div class="flex items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm">
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-bold text-slate-700">篩選隊伍:</span>
+          <select id="adm-filter-team" onchange="renderAdminView()" class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none">
+            <option value="all">全部隊伍 (全體人員)</option>
+            <option value="Mia自營隊">⭐ Mia 自營隊 (KM直屬)</option>
+            <option value="景鴻隊">A 隊 (A001 景鴻隊)</option>
+            <option value="詠豪隊">B 隊 (B001 詠豪隊)</option>
+            <option value="俊華隊">C 隊 (C001 俊華隊)</option>
+          </select>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button onclick="openManageFencesModal()" class="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-xs font-bold text-white shadow-sm flex items-center gap-1.5 transition active:scale-95">
+            <i data-lucide="map-pin" class="w-3.5 h-3.5"></i> 圍欄與分工管理
+          </button>
+          <button onclick="openAddRiderModal()" class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-xs font-bold text-white shadow-sm flex items-center gap-1.5 transition active:scale-95">
+            <i data-lucide="user-plus" class="w-3.5 h-3.5"></i> ＋ 新增普通步兵
+          </button>
+          <button onclick="saveTodayToHistory()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-xs font-bold text-white shadow-sm flex items-center gap-1.5 transition active:scale-95">
+            <i data-lucide="archive" class="w-3.5 h-3.5"></i> 封存今日報數
+          </button>
+        </div>
+      </div>
+
+      <!-- 核心全盤大表 -->
+      <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+        <div class="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+          <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+            <span class="px-2 py-0.5 bg-blue-600 text-white rounded text-xs font-black">Mia組</span>
+            全體人員薪酬結算、圍欄分工、單號與帳戶密碼全覽
+          </h2>
+          <span class="text-xs text-slate-400">總管理員具最高權限：可查看密碼、點擊修改密碼、編輯資料或刪除人員</span>
+        </div>
+
+        <div class="overflow-x-auto table-scroll-container">
+          <table class="w-full text-left text-xs border-collapse min-w-[2400px]" id="admin-main-table">
+            <thead class="bg-slate-100/90 text-slate-600 font-semibold border-b border-slate-200 text-xs" id="admin-table-head"></thead>
+            <tbody id="admin-table-body" class="divide-y divide-slate-100 text-slate-700"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+
+    <!-- ==================== 2. 隊長工作台 ==================== -->
+    <main id="view-captain" class="flex-1 p-6 space-y-4 max-w-6xl w-full mx-auto hidden tab-content">
+      <div class="bg-gradient-to-r from-blue-700 to-indigo-700 rounded-3xl p-5 text-white shadow-lg flex justify-between items-center gap-3">
+        <div>
+          <div class="text-xs text-blue-200 font-bold uppercase tracking-wider">Mia組 • 隊長管理工作台</div>
+          <h2 id="cap-name-display" class="text-2xl font-black mt-1">隊長工作台</h2>
+          <p class="text-xs text-blue-100 mt-1">檢視轄下隊員報數、圍欄件數、簽收/退款單號與待攬收單號。</p>
+        </div>
+        <div class="bg-white/10 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-white/20 text-right">
+          <div class="text-xs text-blue-200">本隊今日總派票量</div>
+          <div id="cap-team-tickets" class="text-2xl font-black mt-0.5">0 票</div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+          <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+            <i data-lucide="users" class="w-4 h-4 text-blue-600"></i> 我負責的隊員名單與單號
+          </h3>
+        </div>
+        <div class="overflow-x-auto table-scroll-container">
+          <table class="w-full text-left text-xs border-collapse min-w-[1500px]">
+            <thead class="bg-slate-100/90 text-slate-600 font-semibold border-b border-slate-200 text-xs" id="captain-table-head"></thead>
+            <tbody id="captain-table-body" class="divide-y divide-slate-100 text-slate-700"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+
+    <!-- ==================== 3. 步兵獨立每日報數端 ==================== -->
+    <main id="view-rider" class="flex-1 p-6 hidden flex justify-center items-start pt-4 tab-content">
+      <div class="w-full max-w-lg bg-white border border-slate-200 rounded-3xl p-6 shadow-xl space-y-4">
+        
+        <div class="flex justify-between items-start border-b border-slate-100 pb-3">
+          <div>
+            <div class="text-xs text-slate-400 font-medium flex items-center gap-1">
+              <span class="font-bold text-blue-600">Mia組</span> • 步兵個人每日報數
+            </div>
+            <h3 id="rider-name-display" class="text-lg font-extrabold text-slate-900 mt-0.5">
+              步兵姓名 <span id="rider-id-badge" class="text-xs px-2 py-0.5 bg-blue-50 text-blue-700 rounded-md font-mono font-bold">ID</span>
+            </h3>
+            <div id="rider-team-display" class="text-xs text-slate-500 font-semibold mt-0.5">所屬隊伍</div>
+          </div>
+          <div class="text-right">
+            <button onclick="openSelfPasswordModal()" class="text-xs text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg font-bold hover:bg-amber-100 transition flex items-center gap-1 ml-auto">
+              <i data-lucide="key" class="w-3 h-3"></i> 修改密碼
+            </button>
+            <div id="rider-payday-display" class="text-[11px] text-purple-700 font-bold bg-purple-50 px-2 py-0.5 rounded border border-purple-200 mt-1.5 inline-block">
+              糧期: 隔日結算
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-4 gap-1.5 text-center text-xs" id="rider-fence-badges"></div>
+
+        <div id="rider-form" class="space-y-3.5">
+          <div class="space-y-2" id="rider-fence-inputs"></div>
+
+          <div class="p-3 bg-emerald-50/60 rounded-2xl border border-emerald-200 space-y-2">
+            <div class="flex justify-between items-center">
+              <label class="text-xs font-bold text-emerald-800 flex items-center gap-1">
+                <i data-lucide="check-circle" class="w-3.5 h-3.5 text-emerald-600"></i> ✅ 今日已簽收件 (件)
+              </label>
+              <input id="inp-signed" type="number" value="0" oninput="recalcRiderTally()" class="w-20 bg-white border border-emerald-300 rounded-lg p-1.5 text-center font-bold text-emerald-700 text-sm">
+            </div>
+            <div>
+              <textarea id="inp-signed-nos" rows="2" placeholder="請輸入/貼上【已簽收件】快件單號..." class="w-full bg-white border border-emerald-200 rounded-xl p-2 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-emerald-500"></textarea>
+            </div>
+          </div>
+
+          <div class="p-3 bg-rose-50/60 rounded-2xl border border-rose-200 space-y-2">
+            <div class="flex justify-between items-center">
+              <label class="text-xs font-bold text-rose-700 flex items-center gap-1">
+                <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 text-rose-600"></i> 🔄 今日已退款件 (件)
+              </label>
+              <input id="inp-refunded" type="number" value="0" oninput="recalcRiderTally()" class="w-20 bg-white border border-rose-300 rounded-lg p-1.5 text-center font-bold text-rose-600 text-sm">
+            </div>
+            <div>
+              <textarea id="inp-refunded-nos" rows="2" placeholder="請輸入/貼上【已退款件】快件單號..." class="w-full bg-white border border-rose-200 rounded-xl p-2 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-rose-500"></textarea>
+            </div>
+          </div>
+
+          <div class="p-3 bg-amber-50/60 rounded-2xl border border-amber-200/80 space-y-2">
+            <div class="flex justify-between items-center">
+              <label class="text-xs font-bold text-amber-900 block flex items-center gap-1">
+                <i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-amber-600"></i> ⚠️ 當天圍欄已清場，但仍有待攬收 (件)
+              </label>
+              <input id="inp-pending-pickup" type="number" value="0" oninput="recalcRiderTally()" class="w-20 bg-white border border-amber-300 rounded-lg p-1.5 text-center font-bold text-amber-800 text-sm">
+            </div>
+            <div>
+              <textarea id="inp-pending-pickup-nos" rows="2" placeholder="請輸入/貼上【清場仍待攬收】快件單號..." class="w-full bg-white border border-amber-200 rounded-xl p-2 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-amber-500"></textarea>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 bg-slate-50 p-3 rounded-2xl border border-slate-200">
+            <div>
+              <label class="text-xs font-bold text-orange-700 block mb-1">預支借支 ($)</label>
+              <input id="inp-rider-advance" type="number" value="0" oninput="recalcRiderTally()" class="w-full bg-white border border-orange-200 rounded-lg p-1.5 text-center font-bold text-orange-700 text-sm">
+            </div>
+            <div>
+              <label class="text-xs font-bold text-rose-700 block mb-1">工單罰款/扣糧 ($)</label>
+              <input id="inp-rider-deduct" type="number" value="0" oninput="recalcRiderTally()" class="w-full bg-white border border-rose-200 rounded-lg p-1.5 text-center font-bold text-rose-700 text-sm">
+            </div>
+          </div>
+
+          <div class="p-4 rounded-2xl bg-slate-900 text-white space-y-2 text-xs shadow-md">
+            <div class="flex justify-between text-slate-300">
+              <span>總派票量: <b id="pv-total-t" class="text-white text-sm">0</b> 票</span>
+              <span>應發總額(毛): <b class="text-emerald-400 text-sm">$<span id="pv-gross-amt">0</span></b></span>
+            </div>
+            <div class="flex justify-between text-slate-400 text-xs pt-1 border-t border-slate-800">
+              <span id="pv-fence-breakdown">分區明細</span>
+              <span>簽收: <b id="pv-signed-txt" class="text-emerald-400">0</b> | 退款: <b id="pv-refund-txt" class="text-rose-400">0</b></span>
+            </div>
+            <div class="pt-2 border-t border-slate-800 grid grid-cols-2 gap-2 text-center">
+              <div class="bg-slate-800/80 p-2 rounded-xl">
+                <div class="text-[11px] text-slate-400">預計實出工資</div>
+                <div class="text-base font-black text-emerald-400 mt-0.5">$<span id="pv-net-amt">0</span></div>
+              </div>
+              <div class="bg-slate-800/80 p-2 rounded-xl">
+                <div class="text-[11px] text-slate-400">剩餘工資 / 欠款</div>
+                <div class="text-base font-black text-indigo-300 mt-0.5">$<span id="pv-remain-amt">0</span></div>
+              </div>
+            </div>
+          </div>
+
+          <button onclick="submitRiderTally()" class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition shadow-lg shadow-blue-600/20 active:scale-98 flex items-center justify-center gap-1.5">
+            <i data-lucide="send" class="w-4 h-4"></i> 🚀 確認提交今日報數與快件單號
+          </button>
+        </div>
+
+        <div id="rider-success-card" class="p-5 rounded-2xl bg-emerald-50 border border-emerald-200 text-center space-y-2 hidden">
+          <i data-lucide="check-circle-2" class="w-10 h-10 text-emerald-600 mx-auto"></i>
+          <h4 class="font-bold text-sm text-emerald-900">今日報數與單號已成功提交！</h4>
+          <button onclick="resetRiderForm()" class="mt-2 px-3.5 py-2 bg-blue-600 text-white text-xs font-bold rounded-xl shadow-md">修改今日報數</button>
+        </div>
+
+      </div>
+    </main>
+
+    <!-- ==================== 4. 頁頂入口 6 - 過往報數紀錄 ==================== -->
+    <main id="view-history" class="flex-1 p-6 space-y-4 max-w-7xl w-full mx-auto hidden tab-content">
+      <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
+        <div class="flex justify-between items-center gap-3 border-b border-slate-100 pb-3">
+          <div>
+            <h2 class="text-base font-extrabold text-slate-900 flex items-center gap-2">
+              <i data-lucide="calendar" class="w-5 h-5 text-blue-600"></i> 6- 紀錄 - 過往報數紀錄清單
+            </h2>
+            <p class="text-xs text-slate-500">查閱每日所有步兵與隊長的歷史報數封存快照</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <input id="history-search-input" type="text" placeholder="搜尋姓名 / ID / 日期" oninput="renderHistoryView()" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-semibold">
+            <button onclick="clearHistoryData()" id="btn-clear-history" class="px-3 py-1.5 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-xl text-xs font-bold border border-rose-200 hidden">清空所有紀錄</button>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto table-scroll-container">
+          <table class="w-full text-left text-xs border-collapse min-w-[1100px]">
+            <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 text-xs">
+              <tr>
+                <th class="py-3 px-3">報數日期</th>
+                <th class="py-3 px-3">步兵姓名 (ID)</th>
+                <th class="py-3 px-3">所屬隊伍</th>
+                <th class="py-3 px-3 text-center">各圍欄件數明細</th>
+                <th class="py-3 px-2 text-center">總票量</th>
+                <th class="py-3 px-2 text-center text-emerald-700">簽收 (件)</th>
+                <th class="py-3 px-2 text-center text-rose-700">退款 (件)</th>
+                <th class="py-3 px-2 text-center text-amber-700">清場待攬收</th>
+                <th class="py-3 px-3 text-right">應發工資</th>
+                <th class="py-3 px-3 text-right">實出工資</th>
+                <th class="py-3 px-3 text-center">單號明細</th>
+              </tr>
+            </thead>
+            <tbody id="history-table-body" class="divide-y divide-slate-100 text-slate-700"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+
+    <!-- ==================== 5. 頁頂入口 7 - 數據統計 ==================== -->
+    <main id="view-stats" class="flex-1 p-6 space-y-4 max-w-7xl w-full mx-auto hidden tab-content">
+      <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-5">
+        <div>
+          <h2 class="text-base font-extrabold text-slate-900 flex items-center gap-2">
+            <i data-lucide="bar-chart-3" class="w-5 h-5 text-emerald-600"></i> 7- 數據 - 區間統計與總量分析
+          </h2>
+          <p class="text-xs text-slate-500">可自選日期區間、指定特定步兵或特定圍欄區域進行總量分析</p>
+        </div>
+
+        <div class="grid grid-cols-4 gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-200/80 text-xs">
+          <div>
+            <label class="font-bold text-slate-700 block mb-1">開始日期</label>
+            <input id="stat-start-date" type="date" class="w-full bg-white border border-slate-200 rounded-xl p-2 font-bold text-slate-800">
+          </div>
+          <div>
+            <label class="font-bold text-slate-700 block mb-1">結束日期</label>
+            <input id="stat-end-date" type="date" class="w-full bg-white border border-slate-200 rounded-xl p-2 font-bold text-slate-800">
+          </div>
+          <div>
+            <label class="font-bold text-slate-700 block mb-1">指定步兵 / 人員</label>
+            <select id="stat-rider-filter" class="w-full bg-white border border-slate-200 rounded-xl p-2 font-bold text-slate-800">
+              <option value="all">全體人員 (全部)</option>
+            </select>
+          </div>
+          <div>
+            <label class="font-bold text-slate-700 block mb-1">指定區域 / 圍欄</label>
+            <select id="stat-fence-filter" class="w-full bg-white border border-slate-200 rounded-xl p-2 font-bold text-slate-800">
+              <option value="all">所有圍欄區域合計</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex justify-end">
+          <button onclick="runStatsAnalysis()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-emerald-600/20 active:scale-95">
+            <i data-lucide="filter" class="w-4 h-4"></i> 執行數據統計計算
+          </button>
+        </div>
+
+        <div class="grid grid-cols-6 gap-3">
+          <div class="bg-blue-50/60 border border-blue-200 p-4 rounded-2xl text-center">
+            <div class="text-xs font-bold text-blue-700">統計總票量</div>
+            <div id="stat-res-tickets" class="text-xl font-black text-blue-900 mt-1">0 票</div>
+          </div>
+          <div class="bg-emerald-50/60 border border-emerald-200 p-4 rounded-2xl text-center">
+            <div class="text-xs font-bold text-emerald-700">總簽收件數</div>
+            <div id="stat-res-signed" class="text-xl font-black text-emerald-900 mt-1">0 件</div>
+          </div>
+          <div class="bg-rose-50/60 border border-rose-200 p-4 rounded-2xl text-center">
+            <div class="text-xs font-bold text-rose-700">總退款件數</div>
+            <div id="stat-res-refunded" class="text-xl font-black text-rose-900 mt-1">0 件</div>
+          </div>
+          <div class="bg-amber-50/60 border border-amber-200 p-4 rounded-2xl text-center">
+            <div class="text-xs font-bold text-amber-800">清場待攬收殘留</div>
+            <div id="stat-res-pending" class="text-xl font-black text-amber-900 mt-1">0 件</div>
+          </div>
+          <div class="bg-indigo-50/60 border border-indigo-200 p-4 rounded-2xl text-center">
+            <div class="text-xs font-bold text-indigo-700">應發總工資</div>
+            <div id="stat-res-gross" class="text-xl font-black text-indigo-900 mt-1">$0</div>
+          </div>
+          <div class="bg-slate-900 text-white p-4 rounded-2xl text-center">
+            <div class="text-xs font-bold text-emerald-400">實出總工資</div>
+            <div id="stat-res-net" class="text-xl font-black text-emerald-400 mt-1">$0</div>
+          </div>
+        </div>
+
+        <div class="border-t border-slate-100 pt-4">
+          <h3 class="text-xs font-bold text-slate-700 mb-2">符合條件之明細清單：</h3>
+          <div class="overflow-x-auto table-scroll-container max-h-96">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 sticky top-0">
+                <tr>
+                  <th class="py-2.5 px-3">日期</th>
+                  <th class="py-2.5 px-3">人員姓名 (ID)</th>
+                  <th class="py-2.5 px-3">篩選項目票量</th>
+                  <th class="py-2.5 px-3 text-center">簽收</th>
+                  <th class="py-2.5 px-3 text-center">退款</th>
+                  <th class="py-2.5 px-3 text-right">應發額</th>
+                  <th class="py-2.5 px-3 text-right">實出工資</th>
+                </tr>
+              </thead>
+              <tbody id="stat-details-tbody" class="divide-y divide-slate-100 text-slate-700"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+
+  </div>
+
+  <!-- ==================== 彈窗 1：單號明細彈窗 ==================== -->
+  <div id="modal-tracking-numbers" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+        <div>
+          <h3 id="modal-track-title" class="font-bold text-base text-slate-900 flex items-center gap-2">
+            <i data-lucide="package" class="w-5 h-5 text-blue-600"></i> 快件單號明細
+          </h3>
+          <p id="modal-track-subtitle" class="text-xs text-slate-500 mt-0.5">簽收件、退款件 & 清場待攬收單號</p>
+        </div>
+        <button onclick="closeTrackingModal()" class="text-slate-400 hover:text-slate-600 p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="font-bold text-emerald-800 block mb-1">✅ 已簽收件快件單號</label>
+          <textarea id="modal-inp-signed-nos" rows="3" placeholder="無單號" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white"></textarea>
+        </div>
+        <div>
+          <label class="font-bold text-rose-800 block mb-1">🔄 已退款件快件單號</label>
+          <textarea id="modal-inp-refunded-nos" rows="3" placeholder="無單號" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-mono focus:outline-none focus:ring-2 focus:ring-rose-500 focus:bg-white"></textarea>
+        </div>
+        <div>
+          <label class="font-bold text-amber-800 block mb-1">⚠️ 圍欄已清場但仍有待攬收快件單號</label>
+          <textarea id="modal-inp-pending-pickup-nos" rows="3" placeholder="無單號" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-mono focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white"></textarea>
+        </div>
+      </div>
+
+      <div class="flex gap-2 pt-2">
+        <button onclick="saveTrackingModal()" id="btn-save-track" class="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition">儲存快件單號</button>
+        <button onclick="closeTrackingModal()" class="px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-semibold">關閉</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 彈窗 2：圍欄與分工管理彈窗 ==================== -->
+  <div id="modal-manage-fences" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+        <h3 class="font-bold text-base text-slate-900 flex items-center gap-2">
+          <i data-lucide="map-pin" class="w-5 h-5 text-purple-600"></i> 圍欄與分工管理中心
+        </h3>
+        <button onclick="closeManageFencesModal()" class="text-slate-400 hover:text-slate-600 p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <div class="space-y-2">
+        <h4 class="text-xs font-bold text-slate-700">現有圍欄區域 (含預設與自訂)：</h4>
+        <div id="fences-manage-list" class="space-y-1.5 max-h-48 overflow-y-auto"></div>
+      </div>
+
+      <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-2.5 text-xs">
+        <div class="font-bold text-slate-800 flex items-center gap-1">
+          <i data-lucide="plus-circle" class="w-4 h-4 text-emerald-600"></i> ＋ 新增自訂圍欄 / 分區分工
+        </div>
+        <div>
+          <label class="text-slate-600 font-semibold block mb-0.5">圍欄名稱</label>
+          <input id="new-fence-name" type="text" placeholder="例如：藍田 / 秀茂坪 / 油塘" class="w-full bg-white border border-slate-200 rounded-xl p-2 font-bold focus:ring-1 focus:ring-purple-500">
+        </div>
+        <div>
+          <label class="text-slate-600 font-semibold block mb-0.5">預設單票票價 ($/件)</label>
+          <input id="new-fence-default-price" type="number" step="0.5" value="4" class="w-full bg-white border border-slate-200 rounded-xl p-2 font-bold focus:ring-1 focus:ring-purple-500">
+        </div>
+        <button onclick="saveNewCustomFence()" class="w-full py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold transition">確認新增此圍欄</button>
+      </div>
+
+      <div class="flex justify-end pt-2">
+        <button onclick="closeManageFencesModal()" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold">完成關閉</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 彈窗 3：新增普通步兵帳戶 ==================== -->
+  <div id="modal-add-rider" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+        <h3 class="font-bold text-base text-slate-900 flex items-center gap-2">
+          <i data-lucide="user-plus" class="w-5 h-5 text-blue-600"></i> 新增普通步兵帳戶
+        </h3>
+        <button onclick="closeAddRiderModal()" class="text-slate-400 hover:text-slate-600 p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="font-bold text-slate-700 block mb-1">步兵名字</label>
+          <input id="new-rider-name" type="text" placeholder="例如：志偉 / 阿強 / 陳大文" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-bold focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <div>
+          <label class="font-bold text-slate-700 block mb-1">歸屬隊伍</label>
+          <select id="new-rider-team" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-bold focus:ring-2 focus:ring-blue-500">
+            <option value="Mia自營隊">⭐ Mia 自營隊 (自動派發 KM001+)</option>
+            <option value="景鴻隊">A 隊 (景鴻隊 - 自動派發 A002+)</option>
+            <option value="詠豪隊">B 隊 (詠豪隊 - 自動派發 B002+)</option>
+            <option value="俊華隊">C 隊 (俊華隊 - 自動派發 C002+)</option>
+          </select>
+        </div>
+
+        <div>
+          <div class="flex justify-between items-center mb-1">
+            <label class="font-bold text-amber-700 block">登入密碼 (可自訂或隨機生成)</label>
+            <button onclick="generateRandomPassword()" type="button" class="text-[10px] text-blue-600 font-bold hover:underline flex items-center gap-0.5">
+              <i data-lucide="refresh-cw" class="w-3 h-3"></i> 隨機生成密碼
+            </button>
+          </div>
+          <input id="new-rider-password" type="text" placeholder="請輸入密碼" value="123456" class="w-full bg-amber-50 border border-amber-200 rounded-xl p-2.5 font-mono font-bold text-amber-900 focus:ring-2 focus:ring-amber-500">
+        </div>
+
+        <div class="space-y-2 bg-blue-50/50 p-3 rounded-xl border border-blue-200">
+          <div class="font-bold text-blue-900">4大指定圍欄單票票價 ($/件)：</div>
+          <div id="new-rider-fence-inputs-list" class="grid grid-cols-2 gap-2"></div>
+        </div>
+
+        <div>
+          <label class="font-bold text-purple-700 block mb-1">出糧糧期</label>
+          <select id="new-rider-payday" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-bold focus:ring-2 focus:ring-purple-500">
+            <option value="隔日結算" selected>隔日結算</option>
+            <option value="日結 (即日)">日結 (即日)</option>
+            <option value="逢週五 (週結)">逢週五 (週結)</option>
+            <option value="每月 7 號 (月結)">每月 7 號 (月結)</option>
+            <option value="每月 15 號 (月結)">每月 15 號 (月結)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="flex gap-2 pt-2">
+        <button onclick="saveNewRider()" class="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition">確認建立步兵</button>
+        <button onclick="closeAddRiderModal()" class="px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-semibold">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 彈窗 4：修改密碼彈窗 ==================== -->
+  <div id="modal-change-password" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl space-y-4">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+        <h3 id="modal-pwd-title" class="font-bold text-base text-slate-900 flex items-center gap-2">
+          <i data-lucide="key" class="w-5 h-5 text-amber-600"></i> 修改密碼
+        </h3>
+        <button onclick="closeChangePasswordModal()" class="text-slate-400 hover:text-slate-600 p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="font-bold text-slate-700 block mb-1">目標帳號</label>
+          <input id="modal-pwd-user-display" type="text" disabled class="w-full bg-slate-100 border border-slate-200 rounded-xl p-2.5 font-bold text-slate-500">
+        </div>
+        <div>
+          <label class="font-bold text-slate-700 block mb-1">輸入新密碼</label>
+          <input id="modal-new-password-input" type="text" placeholder="請輸入新密碼" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-mono font-bold text-slate-900 focus:ring-2 focus:ring-amber-500">
+        </div>
+      </div>
+
+      <div class="flex gap-2 pt-2">
+        <button onclick="submitChangePassword()" class="flex-1 py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition">確認更新密碼</button>
+        <button onclick="closeChangePasswordModal()" class="px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-semibold">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 預設 4 大指定圍欄
+    const defaultFences = [
+      { key: 'laguna', name: '麗港城', defaultPrice: 4, isCore: true },
+      { key: 'koko', name: 'KOKO', defaultPrice: 4, isCore: true },
+      { key: 'industrial', name: '工商', defaultPrice: 5, isCore: true },
+      { key: 'eastern', name: '東區', defaultPrice: 4, isCore: true }
+    ];
+
+    // 初始帳號：只有 ADMIN 與 3 位隊長（無任何預設步兵）
+    const initialBase = [
+      { id: 'ADMIN', name: '總管理員 Mia', role: '管理員', team: 'Mia自營隊', prefix: 'ADMIN', password: 'mia888',
+        counts: { laguna: 0, koko: 0, industrial: 0, eastern: 0 },
+        prices: { laguna: 4, koko: 4, industrial: 5, eastern: 4 },
+        signed: 0, signedNos: '', refunded: 0, refundedNos: '', pendingPickup: 0, pendingPickupNos: '',
+        payday: '月結', commission: 0, penalty: 0, comp: 0, deduct: 0, advance: 0, paidToday: 0, payoutStatus: '待轉帳' },
+
+      { id: 'A001', name: '隊長 A (景鴻)', role: '隊長', team: '景鴻隊', prefix: 'A', password: '100',
+        counts: { laguna: 0, koko: 0, industrial: 0, eastern: 0 },
+        prices: { laguna: 4, koko: 4, industrial: 5, eastern: 4 },
+        signed: 0, signedNos: '', refunded: 0, refundedNos: '', pendingPickup: 0, pendingPickupNos: '',
+        payday: '隔日結算', commission: 0, penalty: 0, comp: 0, deduct: 0, advance: 0, paidToday: 0, payoutStatus: '待轉帳' },
+      
+      { id: 'B001', name: '隊長 B (詠豪)', role: '隊長', team: '詠豪隊', prefix: 'B', password: '201',
+        counts: { laguna: 0, koko: 0, industrial: 0, eastern: 0 },
+        prices: { laguna: 4, koko: 4, industrial: 5, eastern: 4 },
+        signed: 0, signedNos: '', refunded: 0, refundedNos: '', pendingPickup: 0, pendingPickupNos: '',
+        payday: '隔日結算', commission: 0, penalty: 0, comp: 0, deduct: 0, advance: 0, paidToday: 0, payoutStatus: '待轉帳' },
+      
+      { id: 'C001', name: '隊長 C (俊華)', role: '隊長', team: '俊華隊', prefix: 'C', password: '303',
+        counts: { laguna: 0, koko: 0, industrial: 0, eastern: 0 },
+        prices: { laguna: 4, koko: 4, industrial: 4.5, eastern: 4 },
+        signed: 0, signedNos: '', refunded: 0, refundedNos: '', pendingPickup: 0, pendingPickupNos: '',
+        payday: '隔日結算', commission: 0, penalty: 0, comp: 0, deduct: 0, advance: 0, paidToday: 0, payoutStatus: '待轉帳' }
+    ];
+
+    // 全新儲存鍵值：MIA_PURE_V10
+    let fences = JSON.parse(localStorage.getItem('MIA_PURE_V10_FENCES')) || defaultFences;
+    let accounts = JSON.parse(localStorage.getItem('MIA_PURE_V10_ACCOUNTS')) || initialBase;
+    let historyRecords = JSON.parse(localStorage.getItem('MIA_PURE_V10_HIST')) || [];
+    
+    // 強制校正 ADMIN 永遠為管理員
+    let adminIdx = accounts.findIndex(a => a.id.toUpperCase() === 'ADMIN');
+    if (adminIdx === -1) {
+      accounts.unshift({ ...initialBase[0] });
+    } else {
+      accounts[adminIdx].role = '管理員';
+      accounts[adminIdx].name = '總管理員 Mia';
+      accounts[adminIdx].password = accounts[adminIdx].password || 'mia888';
+    }
+
+    let loggedInUser = null;
+    let editingTrackIdx = -1;
+    let pwdTargetIdx = -1;
+
+    function saveData() {
+      localStorage.setItem('MIA_PURE_V10_FENCES', JSON.stringify(fences));
+      localStorage.setItem('MIA_PURE_V10_ACCOUNTS', JSON.stringify(accounts));
+      localStorage.setItem('MIA_PURE_V10_HIST', JSON.stringify(historyRecords));
+    }
+
+    function quickAdminLogin() {
+      document.getElementById('login-username').value = 'ADMIN';
+      document.getElementById('login-password').value = accounts.find(a => a.id.toUpperCase() === 'ADMIN')?.password || 'mia888';
+      handleLogin();
+    }
+
+    function handleLogin() {
+      const u = document.getElementById('login-username').value.trim().toUpperCase();
+      const p = document.getElementById('login-password').value.trim();
+      const errBox = document.getElementById('login-error-msg');
+      errBox.classList.add('hidden');
+
+      const userIdx = accounts.findIndex(a => a.id.toUpperCase() === u && a.password === p);
+
+      if (userIdx !== -1) {
+        const user = accounts[userIdx];
+        
+        if (user.id.toUpperCase() === 'ADMIN') {
+          loggedInUser = { role: 'admin', idx: userIdx, ...user, role: '管理員' };
+        } else if (user.role === '隊長') {
+          loggedInUser = { role: 'captain', idx: userIdx, ...user };
+        } else {
+          loggedInUser = { role: 'rider', idx: userIdx, ...user };
+        }
+        enterApp();
+        return;
+      }
+
+      errBox.classList.remove('hidden');
+    }
+
+    function enterApp() {
+      document.getElementById('view-login').classList.add('hidden');
+      document.getElementById('app-container').classList.remove('hidden');
+
+      const badge = document.getElementById('header-role-badge');
+      const info = document.getElementById('header-user-info');
+      const btnClearHist = document.getElementById('btn-clear-history');
+
+      if (loggedInUser.role === 'admin') {
+        badge.innerText = '👑 總管理員';
+        badge.className = 'text-xs px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-bold leading-none';
+        info.innerText = 'Mia (最高權限：可查看密碼、新增/刪除圍欄分工、結算發薪)';
+        btnClearHist.classList.remove('hidden');
+      } else if (loggedInUser.role === 'captain') {
+        badge.innerText = '🎖️ 隊長';
+        badge.className = 'text-xs px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 font-bold leading-none';
+        info.innerText = `${loggedInUser.name} (${loggedInUser.id})`;
+        btnClearHist.classList.add('hidden');
+      } else {
+        badge.innerText = '🏃 普通步兵';
+        badge.className = 'text-xs px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold leading-none';
+        info.innerText = `${loggedInUser.name} (${loggedInUser.id} • ${loggedInUser.team})`;
+        btnClearHist.classList.add('hidden');
+      }
+
+      switchNavTab('main');
+      lucide.createIcons();
+    }
+
+    function handleLogout() {
+      loggedInUser = null;
+      document.getElementById('login-username').value = '';
+      document.getElementById('login-password').value = '';
+      document.getElementById('login-error-msg').classList.add('hidden');
+      document.getElementById('app-container').classList.add('hidden');
+      document.getElementById('view-login').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function switchNavTab(tab) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.getElementById('nav-btn-main').className = 'px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1 border border-slate-200';
+      document.getElementById('nav-btn-history').className = 'px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1 border border-slate-200';
+      document.getElementById('nav-btn-stats').className = 'px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1 border border-slate-200';
+
+      if (tab === 'main') {
+        document.getElementById('nav-btn-main').className = 'px-3.5 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-bold transition flex items-center gap-1';
+        if (loggedInUser.role === 'admin') {
+          document.getElementById('view-admin').classList.remove('hidden');
+          renderAdminView();
+        } else if (loggedInUser.role === 'captain') {
+          document.getElementById('view-captain').classList.remove('hidden');
+          renderCaptainView(loggedInUser.id);
+        } else {
+          document.getElementById('view-rider').classList.remove('hidden');
+          renderRiderView(loggedInUser.idx);
+        }
+      } else if (tab === 'history') {
+        document.getElementById('nav-btn-history').className = 'px-3.5 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-bold transition flex items-center gap-1';
+        document.getElementById('view-history').classList.remove('hidden');
+        renderHistoryView();
+      } else if (tab === 'stats') {
+        document.getElementById('nav-btn-stats').className = 'px-3.5 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-bold transition flex items-center gap-1';
+        document.getElementById('view-stats').classList.remove('hidden');
+        initStatsView();
+      }
+      lucide.createIcons();
+    }
+
+    // ==================== 1. 總管理員工作台 ====================
+    function renderAdminView() {
+      const filter = document.getElementById('adm-filter-team').value;
+      const thead = document.getElementById('admin-table-head');
+      const tbody = document.getElementById('admin-table-body');
+      
+      tbody.innerHTML = '';
+
+      let fenceHeadersHTML = '';
+      fences.forEach(f => {
+        fenceHeadersHTML += `
+          <th class="py-3 px-2 text-center text-blue-700 bg-blue-50/40">${f.name} (件)</th>
+          <th class="py-3 px-2 text-center text-blue-900 bg-blue-100/40">${f.name} 票價 ($)</th>
+        `;
+      });
+
+      thead.innerHTML = `
+        <tr>
+          <th class="py-3 px-4 sticky left-0 bg-slate-100/95 backdrop-blur-sm z-20 shadow-sm">人員姓名 (ID)</th>
+          <th class="py-3 px-2 text-center text-amber-800 bg-amber-50/70">密碼 (點擊改)</th>
+          ${fenceHeadersHTML}
+          <th class="py-3 px-2 text-center font-bold">總票量</th>
+          <th class="py-3 px-2 text-center text-emerald-700">簽收 (件/單號)</th>
+          <th class="py-3 px-2 text-center text-rose-700 font-bold bg-rose-50/30">退款 (件/單號)</th>
+          <th class="py-3 px-2 text-center text-amber-700 font-bold bg-amber-50/40">清場待攬收</th>
+          <th class="py-3 px-2 text-center font-bold">總金額(毛)</th>
+          <th class="py-3 px-2 text-center text-rose-600 font-medium">扣糧/罰款</th>
+          <th class="py-3 px-2 text-center text-orange-600 font-bold bg-orange-50/40">預支借支</th>
+          <th class="py-3 px-3 text-center text-emerald-700 font-black bg-emerald-50/50">應發總工資</th>
+          <th class="py-3 px-3 text-center text-indigo-700 font-black bg-indigo-50/40">今天實出工資</th>
+          <th class="py-3 px-3 text-center text-rose-700 font-black bg-rose-50/50">剩餘結欠 (欠款)</th>
+          <th class="py-3 px-3 text-center text-purple-700 font-bold bg-purple-50/30">糧期</th>
+          <th class="py-3 px-4 text-right">操作</th>
+        </tr>
+      `;
+
+      let totalTickets = 0, totalSigned = 0, totalRefunded = 0, totalPendingPickup = 0, pendingRidersCount = 0;
+      let totalNetWage = 0, totalPaidToday = 0, totalDebt = 0;
+
+      accounts.forEach((acc, idx) => {
+        if (acc.id === 'ADMIN') return;
+        if (filter !== 'all' && acc.team !== filter) return;
+
+        acc.counts = acc.counts || {};
+        acc.prices = acc.prices || {};
+
+        let ticketCount = 0, gross = 0;
+
+        fences.forEach(f => {
+          const cnt = Number(acc.counts[f.key]) || 0;
+          const prc = Number(acc.prices[f.key]) !== undefined && !isNaN(Number(acc.prices[f.key])) ? Number(acc.prices[f.key]) : (f.defaultPrice || 4);
+          acc.prices[f.key] = prc;
+          ticketCount += cnt;
+          gross += (cnt * prc);
+        });
+
+        const deductions = (acc.penalty || 0) + (acc.comp || 0) + (acc.deduct || 0);
+        const netWage = gross - deductions;
+        const remainDebt = ((acc.advance || 0) + (acc.paidToday || 0)) - netWage;
+
+        totalTickets += ticketCount;
+        totalSigned += (acc.signed || 0);
+        totalRefunded += (acc.refunded || 0);
+        totalPendingPickup += (acc.pendingPickup || 0);
+        if (acc.pendingPickup > 0) pendingRidersCount++;
+
+        totalNetWage += netWage;
+        totalPaidToday += (acc.paidToday || 0);
+        if (remainDebt > 0) totalDebt += remainDebt;
+
+        let deskFencesHTML = '';
+        fences.forEach(f => {
+          const cnt = acc.counts[f.key] || 0;
+          const prc = acc.prices[f.key];
+          deskFencesHTML += `
+            <td class="py-3 px-2 text-center bg-blue-50/30">
+              <input type="number" value="${cnt}" onchange="updateAccountNestedField(${idx}, 'counts', '${f.key}', this.value)" class="w-10 bg-slate-50 border border-slate-200 rounded p-1 text-center font-bold text-blue-700">
+            </td>
+            <td class="py-3 px-2 text-center bg-blue-100/40">
+              <input type="number" step="0.5" value="${prc}" onchange="updateAccountNestedField(${idx}, 'prices', '${f.key}', this.value)" class="w-11 bg-white border border-blue-300 rounded p-1 text-center font-black text-blue-700">
+            </td>
+          `;
+        });
+
+        const tr = document.createElement('tr');
+        tr.className = `hover:bg-slate-50 transition ${acc.pendingPickup > 0 ? 'bg-amber-50/20' : ''}`;
+        tr.innerHTML = `
+          <td class="py-3 px-4 sticky left-0 bg-white shadow-sm z-10">
+            <div class="flex items-center gap-1">
+              <input type="text" value="${acc.name}" onchange="updateAccountFieldStr(${idx}, 'name', this.value)" class="font-bold text-slate-900 bg-transparent border-b border-transparent focus:border-blue-500 focus:bg-slate-50 px-1 py-0.5 rounded outline-none w-28">
+            </div>
+            <div class="text-[10px] text-slate-400 font-mono"><b class="${acc.prefix === 'KM' ? 'text-indigo-600' : 'text-blue-600'}">${acc.id}</b> • ${acc.team} • ${acc.role}</div>
+          </td>
+
+          <td class="py-3 px-2 text-center bg-amber-50/50">
+            <button onclick="openChangePasswordModal(${idx})" class="px-2 py-1 bg-white border border-amber-300 rounded-lg text-amber-900 font-mono font-bold hover:bg-amber-100 text-[11px] shadow-sm">
+              🔑 ${acc.password || '8888'}
+            </button>
+          </td>
+
+          ${deskFencesHTML}
+
+          <td class="py-3 px-2 text-center font-black text-slate-900">${ticketCount}</td>
+          
+          <td class="py-3 px-2 text-center bg-emerald-50/30">
+            <div class="flex items-center justify-center gap-1">
+              <input type="number" value="${acc.signed || 0}" onchange="updateAccountField(${idx}, 'signed', this.value)" class="w-10 bg-slate-50 border border-slate-200 rounded p-1 text-center font-bold text-emerald-600">
+              <button onclick="openTrackingModal(${idx})" title="簽收單號" class="p-1 bg-white border border-emerald-200 text-emerald-600 rounded hover:bg-emerald-50"><i data-lucide="file-text" class="w-3.5 h-3.5"></i></button>
+            </div>
+          </td>
+
+          <td class="py-3 px-2 text-center bg-rose-50/30">
+            <div class="flex items-center justify-center gap-1">
+              <input type="number" value="${acc.refunded || 0}" onchange="updateAccountField(${idx}, 'refunded', this.value)" class="w-10 bg-white border border-rose-300 rounded p-1 text-center font-bold text-rose-600">
+              <button onclick="openTrackingModal(${idx})" title="退款單號" class="p-1 bg-white border border-rose-200 text-rose-600 rounded hover:bg-rose-50"><i data-lucide="file-text" class="w-3.5 h-3.5"></i></button>
+            </div>
+          </td>
+
+          <td class="py-3 px-2 text-center bg-amber-50/40">
+            <div class="flex items-center justify-center gap-1">
+              <input type="number" value="${acc.pendingPickup || 0}" onchange="updateAccountField(${idx}, 'pendingPickup', this.value)" class="w-10 bg-white border ${acc.pendingPickup > 0 ? 'border-amber-500 bg-amber-50 text-amber-700 font-black' : 'border-slate-200'} rounded p-1 text-center font-bold">
+              <button onclick="openTrackingModal(${idx})" title="清場待攬收單號" class="p-1 bg-white border border-amber-300 text-amber-700 rounded hover:bg-amber-50"><i data-lucide="file-text" class="w-3.5 h-3.5"></i></button>
+            </div>
+          </td>
+
+          <td class="py-3 px-2 text-center font-bold text-slate-800">$${gross}</td>
+          
+          <td class="py-3 px-2 text-center">
+            <input type="number" value="${deductions}" onchange="updateAccountField(${idx}, 'deduct', this.value)" class="w-11 bg-slate-50 border border-slate-200 rounded p-1 text-center font-bold text-rose-600">
+          </td>
+
+          <td class="py-3 px-2 text-center bg-orange-50/40">
+            <input type="number" value="${acc.advance || 0}" onchange="updateAccountField(${idx}, 'advance', this.value)" class="w-12 bg-white border border-orange-300 rounded p-1 text-center font-bold text-orange-700">
+          </td>
+
+          <td class="py-3 px-3 text-center font-black text-emerald-600 text-sm bg-emerald-50/50 whitespace-nowrap">
+            $${netWage}
+          </td>
+
+          <td class="py-3 px-3 text-center bg-indigo-50/40">
+            <input type="number" value="${acc.paidToday || 0}" onchange="updateAccountField(${idx}, 'paidToday', this.value)" class="w-14 bg-white border border-indigo-300 rounded p-1 text-center font-black text-indigo-700">
+          </td>
+
+          <td class="py-3 px-3 text-center bg-rose-50/50 whitespace-nowrap">
+            ${remainDebt > 0 ? `
+              <span class="px-2 py-0.5 rounded-full text-xs font-black bg-rose-600 text-white shadow-sm inline-block">欠款 $${remainDebt}</span>
+            ` : `<span class="text-slate-400 font-medium text-[11px]">-</span>`}
+          </td>
+
+          <td class="py-3 px-2 text-center bg-purple-50/30 whitespace-nowrap">
+            <select onchange="updateAccountFieldStr(${idx}, 'payday', this.value)" class="bg-white border border-purple-200 rounded-md px-1.5 py-1 text-[11px] font-bold text-purple-800">
+              <option value="隔日結算" ${acc.payday === '隔日結算' ? 'selected' : ''}>隔日結算</option>
+              <option value="日結 (即日)" ${acc.payday === '日結 (即日)' ? 'selected' : ''}>日結 (即日)</option>
+              <option value="逢週五 (週結)" ${acc.payday === '逢週五 (週結)' ? 'selected' : ''}>逢週五 (週結)</option>
+              <option value="每月 7 號 (月結)" ${acc.payday === '每月 7 號 (月結)' ? 'selected' : ''}>每月 7 號 (月結)</option>
+              <option value="每月 15 號 (月結)" ${acc.payday === '每月 15 號 (月結)' ? 'selected' : ''}>每月 15 號 (月結)</option>
+            </select>
+          </td>
+
+          <td class="py-3 px-4 text-right whitespace-nowrap flex items-center justify-end gap-1.5">
+            <button onclick="payFullWage(${idx}, ${netWage})" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-sm">
+              全額實出
+            </button>
+            <button onclick="deleteAccount(${idx})" class="p-1 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg border border-rose-200" title="刪除此帳戶">
+              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById('adm-stat-tickets').innerText = totalTickets + ' 票';
+      document.getElementById('adm-stat-signed').innerText = totalSigned + ' 件';
+      document.getElementById('adm-stat-refunded').innerText = totalRefunded + ' 件';
+      document.getElementById('adm-stat-pending-pickup').innerText = totalPendingPickup + ' 件殘留';
+      document.getElementById('adm-stat-pending-pickup-riders').innerText = pendingRidersCount;
+      document.getElementById('adm-stat-net').innerText = '$' + totalNetWage.toLocaleString();
+      document.getElementById('adm-stat-paid-today').innerText = '$' + totalPaidToday.toLocaleString();
+      document.getElementById('adm-stat-debt').innerText = '$' + totalDebt.toLocaleString();
+
+      lucide.createIcons();
+    }
+
+    function deleteAccount(idx) {
+      const acc = accounts[idx];
+      if (confirm(`確定要刪除【${acc.name} (${acc.id})】帳號嗎？`)) {
+        accounts.splice(idx, 1);
+        saveData();
+        renderAdminView();
+      }
+    }
+
+    function payFullWage(idx, wage) {
+      accounts[idx].paidToday = wage > 0 ? wage : 0;
+      accounts[idx].payoutStatus = '已全額發放';
+      saveData();
+      renderAdminView();
+    }
+
+    // ==================== 2. 隊長工作台 ====================
+    function renderCaptainView(capId) {
+      const cap = accounts.find(a => a.id === capId);
+      document.getElementById('cap-name-display').innerText = `${cap.name} (${cap.id})`;
+      const thead = document.getElementById('captain-table-head');
+      const tbody = document.getElementById('captain-table-body');
+      
+      tbody.innerHTML = '';
+
+      let capFenceHeadersHTML = '';
+      fences.forEach(f => {
+        capFenceHeadersHTML += `
+          <th class="py-3 px-2 text-center text-blue-700">${f.name} (件)</th>
+          <th class="py-3 px-2 text-center text-blue-900 bg-blue-50/40">${f.name} 票價 ($)</th>
+        `;
+      });
+
+      thead.innerHTML = `
+        <tr>
+          <th class="py-3 px-4 sticky left-0 bg-slate-100/95 z-20 shadow-sm">隊員姓名 (ID)</th>
+          ${capFenceHeadersHTML}
+          <th class="py-3 px-2 text-center font-bold">總票量</th>
+          <th class="py-3 px-2 text-center text-emerald-700">簽收 (件)</th>
+          <th class="py-3 px-2 text-center text-rose-700 font-bold">退款 (件)</th>
+          <th class="py-3 px-3 text-center text-amber-700 font-bold">圍欄待攬收</th>
+          <th class="py-3 px-3 text-center text-emerald-700 font-bold">預估工資</th>
+          <th class="py-3 px-3 text-center">單號查看</th>
+        </tr>
+      `;
+
+      let teamTickets = 0;
+      accounts.filter(a => a.team === cap.team).forEach((acc) => {
+        acc.counts = acc.counts || {};
+        acc.prices = acc.prices || {};
+
+        let tCount = 0, gross = 0;
+        const globalIdx = accounts.findIndex(x => x.id === acc.id);
+
+        let capDeskFencesHTML = '';
+        fences.forEach(f => {
+          const cnt = Number(acc.counts[f.key]) || 0;
+          const prc = Number(acc.prices[f.key]) !== undefined && !isNaN(Number(acc.prices[f.key])) ? Number(acc.prices[f.key]) : (f.defaultPrice || 4);
+          tCount += cnt;
+          gross += (cnt * prc);
+
+          capDeskFencesHTML += `
+            <td class="py-3 px-2 text-center">
+              <input type="number" value="${cnt}" onchange="updateAccountNestedField(${globalIdx}, 'counts', '${f.key}', this.value); renderCaptainView('${capId}');" class="w-10 bg-slate-50 border border-slate-200 rounded p-1 text-center font-bold text-blue-700">
+            </td>
+            <td class="py-3 px-2 text-center bg-blue-50/40">
+              <input type="number" step="0.5" value="${prc}" onchange="updateAccountNestedField(${globalIdx}, 'prices', '${f.key}', this.value); renderCaptainView('${capId}');" class="w-11 bg-white border border-blue-300 rounded p-1 text-center font-bold text-blue-700">
+            </td>
+          `;
+        });
+
+        teamTickets += tCount;
+        const net = gross - (acc.deduct || 0);
+
+        const tr = document.createElement('tr');
+        tr.className = `hover:bg-slate-50 transition ${acc.pendingPickup > 0 ? 'bg-amber-50/20' : ''}`;
+        tr.innerHTML = `
+          <td class="py-3 px-4 font-bold text-slate-900 whitespace-nowrap sticky left-0 bg-white shadow-sm z-10">
+            ${acc.name} <span class="text-xs px-2 py-0.5 rounded font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200">${acc.id}</span>
+          </td>
+          ${capDeskFencesHTML}
+          <td class="py-3 px-2 text-center font-bold text-slate-900">${tCount} 票</td>
+          <td class="py-3 px-2 text-center font-bold text-emerald-600">${acc.signed || 0}</td>
+          <td class="py-3 px-2 text-center font-bold text-rose-600">${acc.refunded || 0}</td>
+          <td class="py-3 px-3 text-center font-bold text-amber-700">${acc.pendingPickup || 0}</td>
+          <td class="py-3 px-3 text-center font-bold text-emerald-600">$${net}</td>
+          <td class="py-3 px-3 text-center">
+            <button onclick="openTrackingModal(${globalIdx})" class="px-2.5 py-1 bg-blue-50 text-blue-700 font-bold rounded-lg border border-blue-200 hover:bg-blue-100 flex items-center gap-1 mx-auto text-xs">
+              <i data-lucide="file-text" class="w-3.5 h-3.5"></i> 查看單號
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById('cap-team-tickets').innerText = teamTickets + ' 票';
+      lucide.createIcons();
+    }
+
+    // ==================== 3. 步兵每日報數端 ====================
+    function renderRiderView(idx) {
+      const acc = accounts[idx];
+      acc.counts = acc.counts || {};
+      acc.prices = acc.prices || {};
+
+      document.getElementById('rider-name-display').innerHTML = `${acc.name} <span id="rider-id-badge" class="text-xs px-2 py-0.5 ${acc.prefix === 'KM' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 'bg-blue-50 text-blue-700 border-blue-200'} rounded-md font-mono font-bold">${acc.id}</span>`;
+      document.getElementById('rider-team-display').innerText = `所屬隊伍：${acc.team}`;
+      document.getElementById('rider-payday-display').innerText = `糧期: ${acc.payday}`;
+
+      const badgesContainer = document.getElementById('rider-fence-badges');
+      const inputsContainer = document.getElementById('rider-fence-inputs');
+      badgesContainer.innerHTML = '';
+      inputsContainer.innerHTML = '';
+
+      fences.forEach(f => {
+        const prc = Number(acc.prices[f.key]) !== undefined && !isNaN(Number(acc.prices[f.key])) ? Number(acc.prices[f.key]) : (f.defaultPrice || 4);
+        const cnt = acc.counts[f.key] || 0;
+
+        badgesContainer.innerHTML += `
+          <div class="bg-blue-50 border border-blue-200 text-blue-800 p-1.5 rounded-xl font-bold">
+            ${f.name}: $${prc}/件
+          </div>
+        `;
+
+        inputsContainer.innerHTML += `
+          <div class="p-2.5 bg-blue-50/50 rounded-2xl border border-blue-100 flex justify-between items-center">
+            <label class="text-xs font-bold text-blue-800">📍 ${f.name} ($${prc}/件)</label>
+            <div class="flex items-center gap-1">
+              <span class="text-xs text-slate-500 font-medium">件數:</span>
+              <input id="inp-fence-${f.key}" type="number" value="${cnt}" oninput="recalcRiderTally()" class="w-16 bg-white border border-blue-300 rounded-lg p-1.5 text-center font-bold text-blue-700 text-sm">
+            </div>
+          </div>
+        `;
+      });
+
+      document.getElementById('inp-signed').value = acc.signed || 0;
+      document.getElementById('inp-signed-nos').value = acc.signedNos || '';
+      document.getElementById('inp-refunded').value = acc.refunded || 0;
+      document.getElementById('inp-refunded-nos').value = acc.refundedNos || '';
+      document.getElementById('inp-pending-pickup').value = acc.pendingPickup || 0;
+      document.getElementById('inp-pending-pickup-nos').value = acc.pendingPickupNos || '';
+      document.getElementById('inp-rider-advance').value = acc.advance || 0;
+      document.getElementById('inp-rider-deduct').value = acc.deduct || 0;
+
+      recalcRiderTally();
+    }
+
+    function recalcRiderTally() {
+      if (!loggedInUser) return;
+      const acc = accounts[loggedInUser.idx];
+
+      let tot = 0, gross = 0, breakdownText = [];
+
+      fences.forEach(f => {
+        const inp = document.getElementById(`inp-fence-${f.key}`);
+        const cnt = inp ? Number(inp.value) || 0 : 0;
+        const prc = Number(acc.prices[f.key]) !== undefined && !isNaN(Number(acc.prices[f.key])) ? Number(acc.prices[f.key]) : (f.defaultPrice || 4);
+        tot += cnt;
+        gross += (cnt * prc);
+        breakdownText.push(`${f.name}:<b>${cnt}</b>`);
+      });
+
+      const signed = Number(document.getElementById('inp-signed').value) || 0;
+      const refunded = Number(document.getElementById('inp-refunded').value) || 0;
+      const advance = Number(document.getElementById('inp-rider-advance').value) || 0;
+      const deduct = Number(document.getElementById('inp-rider-deduct').value) || 0;
+
+      const netWage = gross - deduct;
+      const remainWage = netWage - advance;
+
+      document.getElementById('pv-total-t').innerText = tot;
+      document.getElementById('pv-signed-txt').innerText = signed;
+      document.getElementById('pv-refund-txt').innerText = refunded;
+      document.getElementById('pv-fence-breakdown').innerHTML = breakdownText.join(' | ');
+      document.getElementById('pv-gross-amt').innerText = gross;
+      document.getElementById('pv-net-amt').innerText = netWage;
+      document.getElementById('pv-remain-amt').innerText = remainWage;
+    }
+
+    function submitRiderTally() {
+      if (!loggedInUser) return;
+      const rIdx = loggedInUser.idx;
+      const acc = accounts[rIdx];
+
+      acc.counts = acc.counts || {};
+      let totalTickets = 0, gross = 0;
+
+      fences.forEach(f => {
+        const inp = document.getElementById(`inp-fence-${f.key}`);
+        const cnt = inp ? Number(inp.value) || 0 : 0;
+        acc.counts[f.key] = cnt;
+        totalTickets += cnt;
+        gross += (cnt * (acc.prices[f.key] || f.defaultPrice));
+      });
+
+      acc.signed = Number(document.getElementById('inp-signed').value) || 0;
+      acc.signedNos = document.getElementById('inp-signed-nos').value.trim();
+      acc.refunded = Number(document.getElementById('inp-refunded').value) || 0;
+      acc.refundedNos = document.getElementById('inp-refunded-nos').value.trim();
+      acc.pendingPickup = Number(document.getElementById('inp-pending-pickup').value) || 0;
+      acc.pendingPickupNos = document.getElementById('inp-pending-pickup-nos').value.trim();
+      acc.advance = Number(document.getElementById('inp-rider-advance').value) || 0;
+      acc.deduct = Number(document.getElementById('inp-rider-deduct').value) || 0;
+
+      const todayStr = new Date().toISOString().split('T')[0];
+
+      historyRecords.unshift({
+        date: todayStr,
+        id: acc.id,
+        name: acc.name,
+        team: acc.team,
+        counts: { ...acc.counts },
+        prices: { ...acc.prices },
+        totalTickets: totalTickets,
+        gross: gross,
+        signed: acc.signed,
+        signedNos: acc.signedNos,
+        refunded: acc.refunded,
+        refundedNos: acc.refundedNos,
+        pendingPickup: acc.pendingPickup,
+        pendingPickupNos: acc.pendingPickupNos,
+        advance: acc.advance,
+        deduct: acc.deduct,
+        paidToday: acc.paidToday || 0,
+        netWage: gross - acc.deduct
+      });
+
+      saveData();
+      document.getElementById('rider-form').classList.add('hidden');
+      document.getElementById('rider-success-card').classList.remove('hidden');
+    }
+
+    function resetRiderForm() {
+      document.getElementById('rider-form').classList.remove('hidden');
+      document.getElementById('rider-success-card').classList.add('hidden');
+    }
+
+    // ==================== 4. 歷史報數紀錄 (History) ====================
+    function renderHistoryView() {
+      const tbody = document.getElementById('history-table-body');
+      const search = (document.getElementById('history-search-input').value || '').trim().toLowerCase();
+      tbody.innerHTML = '';
+
+      let list = historyRecords;
+
+      if (loggedInUser.role === 'rider') {
+        list = list.filter(r => r.id === loggedInUser.id);
+      } else if (loggedInUser.role === 'captain') {
+        list = list.filter(r => r.team === loggedInUser.team);
+      }
+
+      if (search) {
+        list = list.filter(r => r.name.toLowerCase().includes(search) || r.id.toLowerCase().includes(search) || r.date.includes(search));
+      }
+
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="11" class="text-center py-8 text-slate-400">目前尚無過往報數紀錄</td></tr>`;
+        return;
+      }
+
+      list.forEach(r => {
+        let fenceDetail = Object.keys(r.counts || {}).map(k => {
+          const f = fences.find(x => x.key === k);
+          return `${f ? f.name : k}: ${r.counts[k]}`;
+        }).join(', ');
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50/80';
+        tr.innerHTML = `
+          <td class="py-3 px-3 font-mono font-bold text-slate-700">${r.date}</td>
+          <td class="py-3 px-3 font-bold text-slate-900">${r.name} <span class="font-mono text-blue-600">(${r.id})</span></td>
+          <td class="py-3 px-3 text-slate-500">${r.team}</td>
+          <td class="py-3 px-3 text-center text-slate-600">${fenceDetail}</td>
+          <td class="py-3 px-2 text-center font-bold">${r.totalTickets || 0}</td>
+          <td class="py-3 px-2 text-center font-bold text-emerald-600">${r.signed || 0}</td>
+          <td class="py-3 px-2 text-center font-bold text-rose-600">${r.refunded || 0}</td>
+          <td class="py-3 px-2 text-center font-bold text-amber-700">${r.pendingPickup || 0}</td>
+          <td class="py-3 px-3 text-right font-bold text-slate-900">$${r.gross || 0}</td>
+          <td class="py-3 px-3 text-right font-black text-emerald-600">$${r.netWage || 0}</td>
+          <td class="py-3 px-3 text-center">
+            <button onclick="viewHistoryNos('${encodeURIComponent(r.signedNos || '')}', '${encodeURIComponent(r.refundedNos || '')}', '${encodeURIComponent(r.pendingPickupNos || '')}', '${r.name}')" class="px-2 py-1 bg-slate-100 hover:bg-blue-50 text-blue-700 rounded font-semibold text-xs">
+              查單號
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+      lucide.createIcons();
+    }
+
+    function viewHistoryNos(signed, ref, pend, name) {
+      document.getElementById('modal-track-title').innerText = `歷史單號明細 - ${name}`;
+      document.getElementById('modal-inp-signed-nos').value = decodeURIComponent(signed);
+      document.getElementById('modal-inp-refunded-nos').value = decodeURIComponent(ref);
+      document.getElementById('modal-inp-pending-pickup-nos').value = decodeURIComponent(pend);
+      document.getElementById('btn-save-track').classList.add('hidden');
+      document.getElementById('modal-tracking-numbers').classList.remove('hidden');
+    }
+
+    function clearHistoryData() {
+      if (confirm('確定要清空所有過往歷史封存紀錄嗎？此操作不可逆！')) {
+        historyRecords = [];
+        saveData();
+        renderHistoryView();
+      }
+    }
+
+    function saveTodayToHistory() {
+      const todayStr = new Date().toISOString().split('T')[0];
+      accounts.forEach(acc => {
+        if (acc.id === 'ADMIN') return;
+        let tot = 0, gross = 0;
+        fences.forEach(f => {
+          const cnt = acc.counts[f.key] || 0;
+          tot += cnt;
+          gross += cnt * (acc.prices[f.key] || f.defaultPrice);
+        });
+        historyRecords.unshift({
+          date: todayStr,
+          id: acc.id,
+          name: acc.name,
+          team: acc.team,
+          counts: { ...acc.counts },
+          prices: { ...acc.prices },
+          totalTickets: tot,
+          gross: gross,
+          signed: acc.signed || 0,
+          signedNos: acc.signedNos || '',
+          refunded: acc.refunded || 0,
+          refundedNos: acc.refundedNos || '',
+          pendingPickup: acc.pendingPickup || 0,
+          pendingPickupNos: acc.pendingPickupNos || '',
+          advance: acc.advance || 0,
+          deduct: acc.deduct || 0,
+          paidToday: acc.paidToday || 0,
+          netWage: gross - (acc.deduct || 0)
+        });
+      });
+      saveData();
+      alert(`✅ 成功將今日全體報數封存至【過往報數紀錄】！`);
+    }
+
+    // ==================== 5. 數據統計 (Stats) ====================
+    function initStatsView() {
+      const todayStr = new Date().toISOString().split('T')[0];
+      document.getElementById('stat-start-date').value = todayStr;
+      document.getElementById('stat-end-date').value = todayStr;
+
+      const rSelect = document.getElementById('stat-rider-filter');
+      rSelect.innerHTML = '<option value="all">全體人員 (全部)</option>';
+      accounts.forEach(a => {
+        if (a.id !== 'ADMIN') {
+          rSelect.innerHTML += `<option value="${a.id}">${a.name} (${a.id} • ${a.team})</option>`;
+        }
+      });
+
+      const fSelect = document.getElementById('stat-fence-filter');
+      fSelect.innerHTML = '<option value="all">所有圍欄區域合計</option>';
+      fences.forEach(f => {
+        fSelect.innerHTML += `<option value="${f.key}">📍 ${f.name}</option>`;
+      });
+
+      runStatsAnalysis();
+    }
+
+    function runStatsAnalysis() {
+      const start = document.getElementById('stat-start-date').value;
+      const end = document.getElementById('stat-end-date').value;
+      const rider = document.getElementById('stat-rider-filter').value;
+      const fence = document.getElementById('stat-fence-filter').value;
+
+      let filtered = historyRecords.filter(r => {
+        let ok = true;
+        if (start && r.date < start) ok = false;
+        if (end && r.date > end) ok = false;
+        if (rider !== 'all' && r.id !== rider) ok = false;
+        return ok;
+      });
+
+      let totTickets = 0, totSigned = 0, totRefunded = 0, totPending = 0, totGross = 0, totNet = 0;
+      const tbody = document.getElementById('stat-details-tbody');
+      tbody.innerHTML = '';
+
+      filtered.forEach(r => {
+        let countThis = 0;
+        if (fence === 'all') {
+          countThis = r.totalTickets || 0;
+        } else {
+          countThis = (r.counts && r.counts[fence]) ? Number(r.counts[fence]) : 0;
+        }
+
+        totTickets += countThis;
+        totSigned += (r.signed || 0);
+        totRefunded += (r.refunded || 0);
+        totPending += (r.pendingPickup || 0);
+        totGross += (r.gross || 0);
+        totNet += (r.netWage || 0);
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="py-2.5 px-3 font-mono">${r.date}</td>
+          <td class="py-2.5 px-3 font-bold">${r.name} (${r.id})</td>
+          <td class="py-2.5 px-3 font-bold text-blue-700">${countThis} 票</td>
+          <td class="py-2.5 px-3 text-center text-emerald-600 font-bold">${r.signed || 0}</td>
+          <td class="py-2.5 px-3 text-center text-rose-600 font-bold">${r.refunded || 0}</td>
+          <td class="py-2.5 px-3 text-right font-bold">$${r.gross || 0}</td>
+          <td class="py-2.5 px-3 text-right font-black text-emerald-600">$${r.netWage || 0}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById('stat-res-tickets').innerText = totTickets + ' 票';
+      document.getElementById('stat-res-signed').innerText = totSigned + ' 件';
+      document.getElementById('stat-res-refunded').innerText = totRefunded + ' 件';
+      document.getElementById('stat-res-pending').innerText = totPending + ' 件';
+      document.getElementById('stat-res-gross').innerText = '$' + totGross.toLocaleString();
+      document.getElementById('stat-res-net').innerText = '$' + totNet.toLocaleString();
+    }
+
+    // ==================== 6. 圍欄與分工管理 ====================
+    function openManageFencesModal() {
+      const list = document.getElementById('fences-manage-list');
+      list.innerHTML = '';
+      fences.forEach((f, idx) => {
+        list.innerHTML += `
+          <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+            <div>
+              <span class="font-bold text-slate-800">${f.name}</span>
+              <span class="text-xs text-slate-400 font-mono ml-2">預設 $${f.defaultPrice}/件</span>
+              ${f.isCore ? '<span class="text-[10px] px-1.5 py-0.5 bg-blue-50 text-blue-700 rounded font-bold ml-1">4大核心</span>' : ''}
+            </div>
+            ${!f.isCore ? `
+              <button onclick="deleteCustomFence(${idx})" class="p-1 text-rose-600 hover:bg-rose-50 rounded" title="刪除此圍欄分工">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>
+            ` : '<span class="text-xs text-slate-400">固定圍欄</span>'}
+          </div>
+        `;
+      });
+      document.getElementById('modal-manage-fences').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeManageFencesModal() {
+      document.getElementById('modal-manage-fences').classList.add('hidden');
+    }
+
+    function saveNewCustomFence() {
+      const name = document.getElementById('new-fence-name').value.trim();
+      const defPrice = Number(document.getElementById('new-fence-default-price').value) || 4;
+      if (!name) { alert('請輸入圍欄名稱！'); return; }
+
+      const key = 'fence_' + Date.now();
+      fences.push({ key: key, name: name, defaultPrice: defPrice, isCore: false });
+
+      accounts.forEach(a => {
+        a.counts = a.counts || {};
+        a.prices = a.prices || {};
+        a.counts[key] = 0;
+        a.prices[key] = defPrice;
+      });
+
+      saveData();
+      alert(`✅ 成功新增分工圍欄【${name}】！`);
+      document.getElementById('new-fence-name').value = '';
+      openManageFencesModal();
+      renderAdminView();
+    }
+
+    function deleteCustomFence(idx) {
+      const f = fences[idx];
+      if (confirm(`確定要刪除圍欄分工【${f.name}】嗎？`)) {
+        fences.splice(idx, 1);
+        saveData();
+        openManageFencesModal();
+        renderAdminView();
+      }
+    }
+
+    // ==================== 7. 新增步兵與密碼管理 ====================
+    function openAddRiderModal() {
+      const list = document.getElementById('new-rider-fence-inputs-list');
+      list.innerHTML = '';
+      fences.filter(f => f.isCore).forEach(f => {
+        list.innerHTML += `
+          <div>
+            <label class="font-bold text-slate-700 block mb-0.5">${f.name} 票價 ($)</label>
+            <input id="new-rider-p-${f.key}" type="number" step="0.5" value="${f.defaultPrice || 4}" class="w-full bg-white border border-blue-200 rounded-lg p-2 font-bold focus:ring-1 focus:ring-blue-500">
+          </div>
+        `;
+      });
+      generateRandomPassword();
+      document.getElementById('modal-add-rider').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeAddRiderModal() {
+      document.getElementById('modal-add-rider').classList.add('hidden');
+    }
+
+    function generateRandomPassword() {
+      const pwd = Math.floor(100000 + Math.random() * 900000).toString();
+      document.getElementById('new-rider-password').value = pwd;
+    }
+
+    function saveNewRider() {
+      const name = document.getElementById('new-rider-name').value.trim();
+      const team = document.getElementById('new-rider-team').value;
+      const pwd = document.getElementById('new-rider-password').value.trim() || '123456';
+      const payday = document.getElementById('new-rider-payday').value;
+
+      if (!name) { alert('請輸入普通步兵姓名！'); return; }
+
+      let prefix = 'KM';
+      let role = '普通步兵';
+
+      if (team === '景鴻隊') { prefix = 'A'; }
+      if (team === '詠豪隊') { prefix = 'B'; }
+      if (team === '俊華隊') { prefix = 'C'; }
+
+      const teamMembers = accounts.filter(a => a.team === team);
+      const nextSeq = teamMembers.length + 1;
+      const newId = prefix + String(nextSeq).padStart(3, '0');
+
+      let riderPrices = {};
+      let riderCounts = {};
+      fences.forEach(f => {
+        const inp = document.getElementById(`new-rider-p-${f.key}`);
+        riderPrices[f.key] = inp ? Number(inp.value) || f.defaultPrice : f.defaultPrice;
+        riderCounts[f.key] = 0;
+      });
+
+      accounts.push({
+        id: newId,
+        name: name,
+        role: role,
+        team: team,
+        prefix: prefix,
+        password: pwd,
+        counts: riderCounts,
+        prices: riderPrices,
+        signed: 0, signedNos: '',
+        refunded: 0, refundedNos: '',
+        pendingPickup: 0, pendingPickupNos: '',
+        payday: payday,
+        commission: 0, penalty: 0, comp: 0, deduct: 0, advance: 0, paidToday: 0, payoutStatus: '待轉帳'
+      });
+
+      saveData();
+      alert(`✅ 成功建立步兵「${name}」！\n所屬隊伍：${team}\n登入帳號：【${newId}】\n設定密碼：【${pwd}】\n糧期：${payday}`);
+      closeAddRiderModal();
+      document.getElementById('new-rider-name').value = '';
+      renderAdminView();
+    }
+
+    // ==================== 8. 密碼修改彈窗 ====================
+    function openChangePasswordModal(idx) {
+      pwdTargetIdx = idx;
+      const acc = accounts[idx];
+      document.getElementById('modal-pwd-user-display').value = `${acc.name} (${acc.id} • ${acc.role})`;
+      document.getElementById('modal-new-password-input').value = acc.password || '';
+      document.getElementById('modal-change-password').classList.remove('hidden');
+    }
+
+    function openSelfPasswordModal() {
+      if (!loggedInUser) return;
+      openChangePasswordModal(loggedInUser.idx);
+    }
+
+    function closeChangePasswordModal() {
+      document.getElementById('modal-change-password').classList.add('hidden');
+    }
+
+    function submitChangePassword() {
+      const newPwd = document.getElementById('modal-new-password-input').value.trim();
+      if (!newPwd) { alert('密碼不能為空！'); return; }
+
+      accounts[pwdTargetIdx].password = newPwd;
+      saveData();
+      alert(`✅ 帳號【${accounts[pwdTargetIdx].id}】密碼已更新為：${newPwd}`);
+      closeChangePasswordModal();
+      if (loggedInUser && loggedInUser.role === 'admin') renderAdminView();
+    }
+
+    // ==================== 9. 單號查看與編輯 ====================
+    function openTrackingModal(idx) {
+      editingTrackIdx = idx;
+      const acc = accounts[idx];
+      document.getElementById('modal-track-title').innerText = `${acc.name} (${acc.id}) 快件單號明細`;
+      document.getElementById('modal-inp-signed-nos').value = acc.signedNos || '';
+      document.getElementById('modal-inp-refunded-nos').value = acc.refundedNos || '';
+      document.getElementById('modal-inp-pending-pickup-nos').value = acc.pendingPickupNos || '';
+      document.getElementById('btn-save-track').classList.remove('hidden');
+      document.getElementById('modal-tracking-numbers').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeTrackingModal() {
+      document.getElementById('modal-tracking-numbers').classList.add('hidden');
+    }
+
+    function saveTrackingModal() {
+      if (editingTrackIdx >= 0) {
+        accounts[editingTrackIdx].signedNos = document.getElementById('modal-inp-signed-nos').value.trim();
+        accounts[editingTrackIdx].refundedNos = document.getElementById('modal-inp-refunded-nos').value.trim();
+        accounts[editingTrackIdx].pendingPickupNos = document.getElementById('modal-inp-pending-pickup-nos').value.trim();
+        saveData();
+        if (loggedInUser.role === 'admin') renderAdminView();
+      }
+      closeTrackingModal();
+    }
+
+    function updateAccountField(idx, field, val) {
+      accounts[idx][field] = Number(val) || 0;
+      saveData();
+      renderAdminView();
+    }
+
+    function updateAccountFieldStr(idx, field, val) {
+      accounts[idx][field] = val;
+      saveData();
+      renderAdminView();
+    }
+
+    function updateAccountNestedField(idx, parentField, key, val) {
+      accounts[idx][parentField] = accounts[idx][parentField] || {};
+      accounts[idx][parentField][key] = Number(val) || 0;
+      saveData();
+      renderAdminView();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      saveData();
+      lucide.createIcons();
+    });
+  </script>
+</body>
+</html>
