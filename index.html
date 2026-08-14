@@ -3,236 +3,616 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>圍欄管理與排班系統</title>
+  <title>區域圍欄與排班調配系統</title>
   <style>
     :root {
       --primary: #2563eb;
       --primary-hover: #1d4ed8;
-      --secondary: #059669;
-      --secondary-hover: #047857;
-      --bg: #f8fafc;
+      --bg: #f3f4f6;
       --card-bg: #ffffff;
-      --text: #1e293b;
-      --text-muted: #64748b;
-      --border: #e2e8f0;
+      --text: #1f2937;
+      --text-muted: #6b7280;
+      --border: #e5e7eb;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
     }
 
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang HK", "Microsoft JhengHei", sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     }
 
     body {
       background-color: var(--bg);
       color: var(--text);
       padding: 16px;
-      line-height: 1.5;
     }
 
     .container {
-      max-width: 1200px;
+      max-width: 1100px;
       margin: 0 auto;
     }
 
-    /* 頁頂快捷入口區域 */
-    .top-action-bar {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 16px;
-      margin-bottom: 24px;
-    }
-
-    /* 電腦版：自動並排成雙欄 */
-    @media (min-width: 768px) {
-      .top-action-bar {
-        grid-template-columns: 1fr 1fr;
-      }
-    }
-
-    /* 快捷入口卡片樣式 */
-    .action-card {
+    /* 頂部導航 / 角色切換 */
+    header {
       background: var(--card-bg);
-      border: 1px solid var(--border);
+      padding: 16px 20px;
       border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      margin-bottom: 20px;
       display: flex;
-      flex-direction: column;
+      flex-wrap: wrap;
       justify-content: space-between;
+      align-items: center;
+      gap: 12px;
     }
 
-    .action-card h3 {
-      font-size: 1.15rem;
-      margin-bottom: 8px;
+    .user-role-select {
       display: flex;
       align-items: center;
       gap: 8px;
+      font-size: 14px;
+      font-weight: 500;
     }
 
-    .action-card p {
-      color: var(--text-muted);
-      font-size: 0.9rem;
-      margin-bottom: 16px;
-    }
-
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 10px 16px;
-      border-radius: 8px;
-      border: none;
-      font-size: 0.95rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.2s, transform 0.1s;
+    select, input, textarea {
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      outline: none;
+      font-size: 14px;
       width: 100%;
     }
 
-    .btn:active {
-      transform: scale(0.98);
-    }
-
-    .btn-blue {
-      background-color: var(--primary);
-      color: #fff;
-    }
-    .btn-blue:hover {
-      background-color: var(--primary-hover);
-    }
-
-    .btn-green {
-      background-color: var(--secondary);
-      color: #fff;
-    }
-    .btn-green:hover {
-      background-color: var(--secondary-hover);
-    }
-
-    /* 表單區塊（點擊後展示） */
-    .form-section {
-      background: var(--card-bg);
-      border-radius: 12px;
-      padding: 24px;
-      border: 1px solid var(--border);
-      box-shadow: 0 4px 6px rgba(0,0,0,0.02);
-      margin-top: 16px;
-    }
-
-    .form-grid {
+    /* 快捷操作網格 */
+    .quick-grid {
       display: grid;
-      grid-template-columns: 1fr;
-      gap: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
     }
 
-    @media (min-width: 640px) {
-      .form-grid {
-        grid-template-columns: 1fr 1fr;
-      }
-      .form-full {
-        grid-column: span 2;
-      }
-    }
-
-    .form-group {
+    .quick-card {
+      background: var(--card-bg);
+      padding: 16px;
+      border-radius: 10px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s ease;
+      border: 2px solid transparent;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      justify-content: center;
+      align-items: center;
+      min-height: 90px;
     }
 
-    .form-group label {
-      font-size: 0.9rem;
-      font-weight: 600;
-    }
-
-    .form-control {
-      padding: 10px 12px;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      font-size: 1rem;
-      outline: none;
-      background-color: #fff;
-    }
-
-    .form-control:focus {
+    .quick-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 6px rgba(0,0,0,0.08);
       border-color: var(--primary);
     }
 
-    textarea.form-control {
-      resize: vertical;
-      min-height: 80px;
+    .quick-card.active {
+      background: #eff6ff;
+      border-color: var(--primary);
+      color: var(--primary);
+      font-weight: bold;
+    }
+
+    .quick-card .title {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .quick-card .badge {
+      font-size: 11px;
+      background: #fee2e2;
+      color: var(--danger);
+      padding: 2px 6px;
+      border-radius: 10px;
+      margin-top: 4px;
+    }
+
+    /* 模組面板 */
+    .panel {
+      display: none;
+      background: var(--card-bg);
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      margin-bottom: 20px;
+    }
+
+    .panel.active {
+      display: block;
+    }
+
+    .panel-header {
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* 表單樣式 */
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 600px) {
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: background 0.2s;
+    }
+
+    .btn:hover {
+      background: var(--primary-hover);
+    }
+
+    /* 列表與標籤頁 */
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      padding: 8px 16px;
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-radius: 6px;
+    }
+
+    .tab-btn.active {
+      background: #e0e7ff;
+      color: var(--primary);
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    .data-table th, .data-table td {
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    .data-table th {
+      background-color: #f9fafb;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .tag-kwun { background: #dbeafe; color: #1e40af; }
+    .tag-east { background: #fef3c7; color: #92400e; }
+    .tag-both { background: #d1fae5; color: #065f46; }
+
+    .lock-screen {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--danger);
+      font-weight: 500;
     }
   </style>
 </head>
 <body>
 
-  <div class="container">
-    
-    <!-- 頁頂快捷入口 (頂部固定/優先顯示) -->
-    <section class="top-action-bar">
-      
-      <!-- 入口 1: 新增圍欄 -->
-      <div class="action-card">
-        <div>
-          <h3>📍 新增圍欄</h3>
-          <p>設定新的地理區域範圍、工作圍欄及劃分派送區域。</p>
-        </div>
-        <button class="btn btn-blue" onclick="alert('打開新增圍欄視窗')">+ 建立圍欄</button>
-      </div>
+<div class="container">
+  <!-- 頂部身分選取 -->
+  <header>
+    <div>
+      <h2>區域調配與排班管理</h2>
+    </div>
+    <div class="user-role-select">
+      <span>當前登入身分：</span>
+      <select id="userRole" onchange="handleRoleChange()" style="width: auto;">
+        <option value="Captain_A">隊長 A</option>
+        <option value="Captain_B">隊長 B</option>
+        <option value="Staff">一般同事</option>
+      </select>
+    </div>
+  </header>
 
-      <!-- 入口 2: 第二天上班同事 -->
-      <div class="action-card">
-        <div>
-          <h3>🚶 第二天上班同事排班</h3>
-          <p>安排翌日出勤步兵名單、上班時間及特別工作備註。</p>
-        </div>
-        <button class="btn btn-green" onclick="document.getElementById('duty-form').scrollIntoView({behavior: 'smooth'})">+ 登記步兵排班</button>
-      </div>
-
-    </section>
-
-    <!-- 翌日上班同事登記表單示範 -->
-    <section id="duty-form" class="form-section">
-      <h2 style="margin-bottom: 16px; font-size: 1.25rem;">登記翌日步兵上班資料</h2>
-      
-      <form onsubmit="event.preventDefault(); alert('提交成功！');">
-        <div class="form-grid">
-          
-          <!-- 步兵姓名 -->
-          <div class="form-group">
-            <label for="staff-name">步兵姓名</label>
-            <select id="staff-name" class="form-control" required>
-              <option value="">-- 請選擇步兵同事 --</option>
-              <option value="1">陳大文 (步兵 01)</option>
-              <option value="2">李小龍 (步兵 02)</option>
-              <option value="3">張三豐 (步兵 03)</option>
-            </select>
-          </div>
-
-          <!-- 上班時間 -->
-          <div class="form-group">
-            <label for="duty-time">上班時間</label>
-            <input type="time" id="duty-time" class="form-control" required value="08:00">
-          </div>
-
-          <!-- 備註 (跨滿整行) -->
-          <div class="form-group form-full">
-            <label for="notes">備註</label>
-            <textarea id="notes" class="form-control" placeholder="輸入特別指示、負責特定區域或物資交接備註..."></textarea>
-          </div>
-
-          <!-- 提交按鈕 -->
-          <div class="form-full" style="margin-top: 8px;">
-            <button type="submit" class="btn btn-green">確認儲存排班</button>
-          </div>
-
-        </div>
-      </form>
-    </section>
-
+  <!-- 快捷操作入口網格 -->
+  <div class="quick-grid">
+    <div class="quick-card active" onclick="switchTab(1)">
+      <div class="title">1. 新增自訂圍欄</div>
+      <div style="font-size:12px; color:var(--text-muted);">觀塘 / 東區</div>
+    </div>
+    <div class="quick-card" onclick="switchTab(2)">
+      <div class="title">2. 區域分工檢視</div>
+      <div style="font-size:12px; color:var(--text-muted);">東區 / 觀塘分工</div>
+    </div>
+    <div class="quick-card" onclick="switchTab(3)">
+      <div class="title">3. 觀塘區圍欄數量</div>
+      <div style="font-size:12px; color:var(--text-muted);">即時統計</div>
+    </div>
+    <div class="quick-card" onclick="switchTab(4)">
+      <div class="title">4. 東區圍欄數量</div>
+      <span class="badge">限隊長 A + B</span>
+    </div>
+    <div class="quick-card" onclick="switchTab(5)">
+      <div class="title">5. 翌日報更與排班</div>
+      <div style="font-size:12px; color:var(--text-muted);">填報與分派</div>
+    </div>
   </div>
+
+  <!-- 面板 1: 新增自訂圍欄 -->
+  <div id="panel-1" class="panel active">
+    <div class="panel-header">
+      <h3>快捷操作 1 - 新增自訂圍欄</h3>
+    </div>
+    <form id="addFenceForm" onsubmit="handleAddFence(event)">
+      <div class="form-row">
+        <div class="form-group">
+          <label>所屬區域</label>
+          <select id="fenceRegion" required>
+            <option value="觀塘區">觀塘區</option>
+            <option value="東區">東區</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>自訂圍欄名稱</label>
+          <input type="text" id="fenceName" placeholder="例如：觀塘 A-1 區 / 太古 01" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>圍欄描述 / 備註</label>
+        <input type="text" id="fenceDesc" placeholder="可選填相關範圍特徵">
+      </div>
+      <button type="submit" class="btn">新增圍欄</button>
+    </form>
+  </div>
+
+  <!-- 面板 2: 區域分工 -->
+  <div id="panel-2" class="panel">
+    <div class="panel-header">
+      <h3>快捷操作 2 - 區域分工明細</h3>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchDivisionTab('East')">東區分工</button>
+      <button class="tab-btn" onclick="switchDivisionTab('Kwun')">觀塘分工</button>
+    </div>
+    <div id="divisionContent">
+      <!-- 動態載入分工 -->
+    </div>
+  </div>
+
+  <!-- 面板 3: 觀塘區圍欄數量 -->
+  <div id="panel-3" class="panel">
+    <div class="panel-header">
+      <h3>快捷操作 3 - 觀塘區圍欄清單</h3>
+    </div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>圍欄名稱</th>
+          <th>備註</th>
+          <th>建立時間</th>
+        </tr>
+      </thead>
+      <tbody id="kwunFenceList">
+        <!-- 動態渲染 -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 面板 4: 東區圍欄數量 (隊長限定) -->
+  <div id="panel-4" class="panel">
+    <div class="panel-header">
+      <h3>快捷操作 4 - 東區圍欄清單</h3>
+    </div>
+    <div id="eastFenceContent">
+      <!-- 根據權限動態渲染 -->
+    </div>
+  </div>
+
+  <!-- 面板 5: 翌日上班同事報更與排班 -->
+  <div id="panel-5" class="panel">
+    <div class="panel-header">
+      <h3>快捷操作 5 - 翌日同事報更與編排</h3>
+    </div>
+    <form id="shiftForm" onsubmit="handleShiftSubmit(event)" style="margin-bottom: 24px;">
+      <div class="form-row">
+        <div class="form-group">
+          <label>同事姓名</label>
+          <input type="text" id="staffName" placeholder="輸入姓名" required>
+        </div>
+        <div class="form-group">
+          <label>上班區域（3 選 1）</label>
+          <select id="staffRegion" required>
+            <option value="東區">東區</option>
+            <option value="觀塘區">觀塘區</option>
+            <option value="兩個區都可以">兩個區都可以</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>上班時間</label>
+          <input type="time" id="staffTime" required>
+        </div>
+        <div class="form-group">
+          <label>負責圍欄 (管理者編排)</label>
+          <select id="assignedFence">
+            <option value="待編排">-- 待編排 --</option>
+            <!-- 動態加入圍欄 -->
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>排班備註</label>
+        <textarea id="shiftNotes" rows="2" placeholder="填寫調配備註事項..."></textarea>
+      </div>
+      <button type="submit" class="btn">提交報更資料</button>
+    </form>
+
+    <h4 style="margin-bottom: 10px;">翌日排班報更紀錄</h4>
+    <div style="overflow-x: auto;">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>姓名</th>
+            <th>報更意向區域</th>
+            <th>上班時間</th>
+            <th>負責圍欄</th>
+            <th>排班備註</th>
+          </tr>
+        </thead>
+        <tbody id="shiftList">
+          <!-- 動態載入報更資料 -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  // 核心資料庫 (LocalStorage 或記憶體預設值)
+  let fences = [
+    { id: 1, region: '觀塘區', name: '觀塘開源道 A', desc: '核心工廈段', time: '2026-08-15' },
+    { id: 2, region: '觀塘區', name: '九龍灣常悅道', desc: '商貿區段', time: '2026-08-15' },
+    { id: 3, region: '東區', name: '鰂魚涌太古坊', desc: '辦公大樓重點', time: '2026-08-15' },
+    { id: 4, region: '東區', name: '柴灣新廈街', desc: '工業與住宅過渡', time: '2026-08-15' }
+  ];
+
+  let shifts = [
+    { name: '陳大文', region: '兩個區都可以', time: '09:00', fence: '觀塘開源道 A', notes: '已備車' },
+    { name: '李小龍', region: '東區', time: '10:00', fence: '鰂魚涌太古坊', notes: '早退需18:00前走' }
+  ];
+
+  let currentDivision = 'East';
+
+  function switchTab(index) {
+    document.querySelectorAll('.quick-card').forEach((c, i) => {
+      c.classList.toggle('active', i === index - 1);
+    });
+    document.querySelectorAll('.panel').forEach((p, i) => {
+      p.classList.toggle('active', i === index - 1);
+    });
+
+    if (index === 2) renderDivision();
+    if (index === 3) renderKwunFences();
+    if (index === 4) renderEastFences();
+    if (index === 5) renderShiftOptions();
+  }
+
+  function handleRoleChange() {
+    renderEastFences();
+  }
+
+  // 1. 新增圍欄
+  function handleAddFence(e) {
+    e.preventDefault();
+    const region = document.getElementById('fenceRegion').value;
+    const name = document.getElementById('fenceName').value;
+    const desc = document.getElementById('fenceDesc').value;
+
+    fences.push({
+      id: Date.now(),
+      region,
+      name,
+      desc: desc || '--',
+      time: new Date().toISOString().split('T')[0]
+    });
+
+    alert(`已成功為【${region}】新增自訂圍欄：${name}`);
+    document.getElementById('addFenceForm').reset();
+    renderShiftOptions();
+  }
+
+  // 2. 區域分工
+  function switchDivisionTab(tab) {
+    currentDivision = tab;
+    document.querySelectorAll('.tabs .tab-btn').forEach((btn, i) => {
+      btn.classList.toggle('active', (tab === 'East' && i === 0) || (tab === 'Kwun' && i === 1));
+    });
+    renderDivision();
+  }
+
+  function renderDivision() {
+    const container = document.getElementById('divisionContent');
+    const targetRegion = currentDivision === 'East' ? '東區' : '觀塘區';
+    
+    // 篩選負責此區域的排班人員
+    const filteredShifts = shifts.filter(s => {
+      const fenceObj = fences.find(f => f.name === s.fence);
+      return fenceObj && fenceObj.region === targetRegion;
+    });
+
+    let html = `
+      <div style="margin-bottom: 12px; font-weight: 500;">當前展示：${targetRegion}工作分派 (${filteredShifts.length} 人)</div>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>負責同事</th>
+            <th>負責圍欄</th>
+            <th>上班時間</th>
+            <th>備註</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    if (filteredShifts.length === 0) {
+      html += `<tr><td colspan="4" style="text-align:center; color: var(--text-muted);">暫無此區分工記錄</td></tr>`;
+    } else {
+      filteredShifts.forEach(s => {
+        html += `
+          <tr>
+            <td><b>${s.name}</b></td>
+            <td>${s.fence}</td>
+            <td>${s.time}</td>
+            <td>${s.notes || '--'}</td>
+          </tr>
+        `;
+      });
+    }
+
+    html += `</tbody></table>`;
+    container.innerHTML = html;
+  }
+
+  // 3. 觀塘區圍欄
+  function renderKwunFences() {
+    const tbody = document.getElementById('kwunFenceList');
+    const kwunData = fences.filter(f => f.region === '觀塘區');
+    tbody.innerHTML = kwunData.map(f => `
+      <tr>
+        <td><b>${f.name}</b></td>
+        <td>${f.desc}</td>
+        <td>${f.time}</td>
+      </tr>
+    `).join('') || '<tr><td colspan="3" style="text-align:center;">暫無圍欄</td></tr>';
+  }
+
+  // 4. 東區圍欄（隊長限定）
+  function renderEastFences() {
+    const role = document.getElementById('userRole').value;
+    const container = document.getElementById('eastFenceContent');
+
+    if (role === 'Captain_A' || role === 'Captain_B') {
+      const eastData = fences.filter(f => f.region === '東區');
+      container.innerHTML = `
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>圍欄名稱</th>
+              <th>備註</th>
+              <th>建立時間</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${eastData.map(f => `
+              <tr>
+                <td><b>${f.name}</b></td>
+                <td>${f.desc}</td>
+                <td>${f.time}</td>
+              </tr>
+            `).join('') || '<tr><td colspan="3" style="text-align:center;">暫無圍欄</td></tr>'}
+          </tbody>
+        </table>
+      `;
+    } else {
+      container.innerHTML = `
+        <div class="lock-screen">
+          ⚠️ 權限不足：東區圍欄清單與數量僅供 <b>隊長 A</b> 及 <b>隊長 B</b> 查閱。
+        </div>
+      `;
+    }
+  }
+
+  // 5. 報更與排班
+  function renderShiftOptions() {
+    const select = document.getElementById('assignedFence');
+    select.innerHTML = '<option value="待編排">-- 待編排 --</option>' + 
+      fences.map(f => `<option value="${f.name}">[${f.region}] ${f.name}</option>`).join('');
+    
+    renderShiftList();
+  }
+
+  function renderShiftList() {
+    const tbody = document.getElementById('shiftList');
+    tbody.innerHTML = shifts.map(s => {
+      let tagClass = 'tag-both';
+      if (s.region === '東區') tagClass = 'tag-east';
+      if (s.region === '觀塘區') tagClass = 'tag-kwun';
+
+      return `
+        <tr>
+          <td><b>${s.name}</b></td>
+          <td><span class="tag ${tagClass}">${s.region}</span></td>
+          <td>${s.time}</td>
+          <td>${s.fence}</td>
+          <td>${s.notes || '--'}</td>
+        </tr>
+      `;
+    }).join('') || '<tr><td colspan="5" style="text-align:center;">暫無報更紀錄</td></tr>';
+  }
+
+  function handleShiftSubmit(e) {
+    e.preventDefault();
+    const name = document.getElementById('staffName').value;
+    const region = document.getElementById('staffRegion').value;
+    const time = document.getElementById('staffTime').value;
+    const fence = document.getElementById('assignedFence').value;
+    const notes = document.getElementById('shiftNotes').value;
+
+    shifts.unshift({ name, region, time, fence, notes });
+    alert('已成功登記翌日報更及排班！');
+    document.getElementById('shiftForm').reset();
+    renderShiftList();
+  }
+
+  // 初始化執行
+  renderShiftOptions();
+</script>
 
 </body>
 </html>
